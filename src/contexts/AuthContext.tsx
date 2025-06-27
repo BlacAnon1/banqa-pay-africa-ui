@@ -34,6 +34,7 @@ interface UserProfile {
   marketing_consent?: boolean;
   two_factor_enabled?: boolean;
   avatar_url?: string;
+  user_role?: string;
 }
 
 interface AuthContextType {
@@ -43,7 +44,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   signUp: (data: SignUpData) => Promise<{ error: any }>;
+  signUpWithPhone: (data: PhoneSignUpData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithPhone: (phone: string, password: string) => Promise<{ error: any }>;
+  signInWithOTP: (phone: string) => Promise<{ error: any }>;
+  verifyOTP: (phone: string, token: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile>) => Promise<{ error: any }>;
@@ -55,6 +60,17 @@ interface SignUpData {
   password: string;
   fullName: string;
   phoneNumber?: string;
+  countryOfResidence: string;
+  dateOfBirth?: string;
+  termsAccepted: boolean;
+  privacyPolicyAccepted: boolean;
+  marketingConsent?: boolean;
+}
+
+interface PhoneSignUpData {
+  phone: string;
+  password: string;
+  fullName: string;
   countryOfResidence: string;
   dateOfBirth?: string;
   termsAccepted: boolean;
@@ -153,7 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: data.fullName,
             phone_number: data.phoneNumber,
-            country_of_residence: data.countryOfResidence, // Fixed: using correct key
+            country_of_residence: data.countryOfResidence,
             date_of_birth: data.dateOfBirth,
             terms_accepted: data.termsAccepted,
             privacy_policy_accepted: data.privacyPolicyAccepted,
@@ -177,6 +193,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUpWithPhone = async (data: PhoneSignUpData) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signUp({
+        phone: data.phone,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+            country_of_residence: data.countryOfResidence,
+            date_of_birth: data.dateOfBirth,
+            terms_accepted: data.termsAccepted,
+            privacy_policy_accepted: data.privacyPolicyAccepted,
+            marketing_consent: data.marketingConsent || false
+          }
+        }
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -184,6 +227,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithPhone = async (phone: string, password: string) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        phone,
+        password
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithOTP = async (phone: string) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        phone,
+        options: {
+          shouldCreateUser: false
+        }
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOTP = async (phone: string, token: string) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms'
       });
 
       return { error };
@@ -208,13 +305,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = signOut; // Alias for signOut
+  const logout = signOut;
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     try {
       if (!user) return { error: 'No authenticated user' };
 
-      // Convert the profileData to match the database schema types
       const updateData: Record<string, any> = {};
       
       Object.entries(profileData).forEach(([key, value]) => {
@@ -246,7 +342,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!user,
       loading,
       signUp,
+      signUpWithPhone,
       signIn,
+      signInWithPhone,
+      signInWithOTP,
+      verifyOTP,
       signOut,
       logout,
       updateProfile,

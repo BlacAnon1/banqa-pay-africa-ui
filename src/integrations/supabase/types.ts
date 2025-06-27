@@ -236,6 +236,72 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string | null
+          id: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          id?: string
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          id?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          metadata: Json | null
+          provider_name: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          metadata?: Json | null
+          provider_name: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          metadata?: Json | null
+          provider_name?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address_line_1: string | null
@@ -263,6 +329,7 @@ export type Database = {
           terms_accepted: boolean | null
           two_factor_enabled: boolean | null
           updated_at: string | null
+          user_role: string | null
           user_status: Database["public"]["Enums"]["user_status"] | null
           verification_level:
             | Database["public"]["Enums"]["verification_level"]
@@ -294,6 +361,7 @@ export type Database = {
           terms_accepted?: boolean | null
           two_factor_enabled?: boolean | null
           updated_at?: string | null
+          user_role?: string | null
           user_status?: Database["public"]["Enums"]["user_status"] | null
           verification_level?:
             | Database["public"]["Enums"]["verification_level"]
@@ -325,10 +393,106 @@ export type Database = {
           terms_accepted?: boolean | null
           two_factor_enabled?: boolean | null
           updated_at?: string | null
+          user_role?: string | null
           user_status?: Database["public"]["Enums"]["user_status"] | null
           verification_level?:
             | Database["public"]["Enums"]["verification_level"]
             | null
+        }
+        Relationships: []
+      }
+      receipts: {
+        Row: {
+          file_url: string
+          id: string
+          transaction_id: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          file_url: string
+          id?: string
+          transaction_id: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          file_url?: string
+          id?: string
+          transaction_id?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          api_endpoint: string | null
+          country: string
+          created_at: string | null
+          id: string
+          input_fields: Json
+          is_active: boolean
+          provider_name: string
+          service_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          country: string
+          created_at?: string | null
+          id?: string
+          input_fields?: Json
+          is_active?: boolean
+          provider_name: string
+          service_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          country?: string
+          created_at?: string | null
+          id?: string
+          input_fields?: Json
+          is_active?: boolean
+          provider_name?: string
+          service_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          status: string
+          subject: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          status?: string
+          subject: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          status?: string
+          subject?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -341,7 +505,9 @@ export type Database = {
           external_reference: string | null
           id: string
           metadata: Json | null
+          provider_name: string | null
           reference_number: string
+          service_type: string | null
           status: string
           transaction_type: string
           updated_at: string | null
@@ -355,7 +521,9 @@ export type Database = {
           external_reference?: string | null
           id?: string
           metadata?: Json | null
+          provider_name?: string | null
           reference_number: string
+          service_type?: string | null
           status?: string
           transaction_type: string
           updated_at?: string | null
@@ -369,7 +537,9 @@ export type Database = {
           external_reference?: string | null
           id?: string
           metadata?: Json | null
+          provider_name?: string | null
           reference_number?: string
+          service_type?: string | null
           status?: string
           transaction_type?: string
           updated_at?: string | null
@@ -438,6 +608,33 @@ export type Database = {
           },
         ]
       }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string | null
+          currency: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string | null
+          currency?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -467,6 +664,19 @@ export type Database = {
         | "approved"
         | "rejected"
         | "expired"
+      notification_type: "transaction" | "payment" | "system" | "promotional"
+      payment_method_type: "card" | "mobile_money" | "bank_transfer"
+      service_type:
+        | "electricity"
+        | "water"
+        | "internet"
+        | "cable_tv"
+        | "mobile_airtime"
+        | "mobile_data"
+        | "insurance"
+        | "school_fees"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
+      transaction_status: "pending" | "completed" | "failed" | "cancelled"
       user_status: "pending" | "active" | "suspended" | "deactivated"
       verification_level: "unverified" | "basic" | "enhanced" | "premium"
     }
@@ -608,6 +818,20 @@ export const Constants = {
         "rejected",
         "expired",
       ],
+      notification_type: ["transaction", "payment", "system", "promotional"],
+      payment_method_type: ["card", "mobile_money", "bank_transfer"],
+      service_type: [
+        "electricity",
+        "water",
+        "internet",
+        "cable_tv",
+        "mobile_airtime",
+        "mobile_data",
+        "insurance",
+        "school_fees",
+      ],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
+      transaction_status: ["pending", "completed", "failed", "cancelled"],
       user_status: ["pending", "active", "suspended", "deactivated"],
       verification_level: ["unverified", "basic", "enhanced", "premium"],
     },
