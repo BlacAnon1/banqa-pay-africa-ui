@@ -3,6 +3,10 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type UserStatus = Database['public']['Enums']['user_status'];
+type VerificationLevel = Database['public']['Enums']['verification_level'];
 
 interface UserProfile {
   id: string;
@@ -22,8 +26,8 @@ interface UserProfile {
   employer?: string;
   monthly_income?: number;
   source_of_funds?: string;
-  user_status?: string;
-  verification_level?: string;
+  user_status?: UserStatus;
+  verification_level?: VerificationLevel;
   profile_completed?: boolean;
   terms_accepted?: boolean;
   privacy_policy_accepted?: boolean;
@@ -41,6 +45,7 @@ interface AuthContextType {
   signUp: (data: SignUpData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile>) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
@@ -187,13 +192,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const logout = signOut; // Alias for signOut
+
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     try {
       if (!user) return { error: 'No authenticated user' };
 
+      // Convert the profileData to match the database schema types
+      const updateData: any = { ...profileData };
+      
       const { error } = await supabase
         .from('profiles')
-        .update(profileData)
+        .update(updateData)
         .eq('id', user.id);
 
       if (!error) {
@@ -216,6 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       signUp,
       signIn,
       signOut,
+      logout,
       updateProfile,
       refreshProfile
     }}>

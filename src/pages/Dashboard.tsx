@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Dashboard = () => {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { profile } = useAuth();
 
   const upcomingBills = [
     { id: 1, service: 'Electricity', amount: '₦15,500', dueDate: 'Dec 30', status: 'due' },
@@ -34,7 +34,7 @@ const Dashboard = () => {
       {/* Welcome Section */}
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-foreground">
-          {t('dashboard.welcome')}, {user?.fullName?.split(' ')[0]}! 👋
+          {t('dashboard.welcome')}, {profile?.full_name?.split(' ')[0] || 'User'}! 👋
         </h1>
         <p className="text-muted-foreground">
           Here's your financial overview and upcoming bills

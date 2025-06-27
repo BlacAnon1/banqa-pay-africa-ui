@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,25 +9,29 @@ import { Upload, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
+
+type DocumentType = Database['public']['Enums']['document_type'];
+type KYCStatus = Database['public']['Enums']['kyc_status'];
 
 interface KYCDocument {
   id: string;
-  document_type: string;
+  document_type: DocumentType;
   document_url: string;
-  verification_status: string;
+  verification_status: KYCStatus;
   document_number?: string;
   created_at: string;
 }
 
 const DocumentUpload = () => {
   const { user } = useAuth();
-  const [selectedDocumentType, setSelectedDocumentType] = useState('');
+  const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | ''>('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [documents, setDocuments] = useState<KYCDocument[]>([]);
 
-  const documentTypes = [
+  const documentTypes: { value: DocumentType; label: string }[] = [
     { value: 'national_id', label: 'National ID' },
     { value: 'passport', label: 'Passport' },
     { value: 'drivers_license', label: 'Driver\'s License' },
@@ -36,7 +40,7 @@ const DocumentUpload = () => {
     { value: 'selfie', label: 'Selfie with ID' },
   ];
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: KYCStatus) => {
     switch (status) {
       case 'approved':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
@@ -103,10 +107,10 @@ const DocumentUpload = () => {
         .from('kyc_documents')
         .insert({
           user_id: user.id,
-          document_type: selectedDocumentType,
+          document_type: selectedDocumentType as DocumentType,
           document_number: documentNumber || null,
           document_url: documentUrl,
-          verification_status: 'in_progress'
+          verification_status: 'in_progress' as KYCStatus
         });
 
       if (error) {
@@ -176,7 +180,7 @@ const DocumentUpload = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Document Type</Label>
-              <Select value={selectedDocumentType} onValueChange={setSelectedDocumentType}>
+              <Select value={selectedDocumentType} onValueChange={(value: DocumentType) => setSelectedDocumentType(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select document type" />
                 </SelectTrigger>
