@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 interface Service {
   id: string;
@@ -8,7 +9,7 @@ interface Service {
   country: string;
   provider_name: string;
   api_endpoint?: string;
-  input_fields: any[];
+  input_fields: Json;
   is_active: boolean;
 }
 
@@ -51,6 +52,14 @@ export const useServices = (country?: string) => {
     return types;
   };
 
+  const getInputFields = (service: Service): any[] => {
+    // Helper function to safely parse input_fields as an array
+    if (Array.isArray(service.input_fields)) {
+      return service.input_fields;
+    }
+    return [];
+  };
+
   useEffect(() => {
     fetchServices();
   }, [country]);
@@ -60,6 +69,7 @@ export const useServices = (country?: string) => {
     loading,
     fetchServices,
     getServicesByType,
-    getServiceTypes
+    getServiceTypes,
+    getInputFields
   };
 };
