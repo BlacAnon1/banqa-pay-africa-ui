@@ -199,7 +199,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!user) return { error: 'No authenticated user' };
 
       // Convert the profileData to match the database schema types
-      const updateData: any = { ...profileData };
+      const updateData: Record<string, any> = {};
+      
+      Object.entries(profileData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          updateData[key] = value;
+        }
+      });
       
       const { error } = await supabase
         .from('profiles')
