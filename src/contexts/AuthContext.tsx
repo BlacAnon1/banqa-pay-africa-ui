@@ -99,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -117,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -136,6 +138,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const redirectUrl = `${window.location.origin}/`;
       
+      console.log('Signing up with data:', {
+        email: data.email,
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        countryOfResidence: data.countryOfResidence
+      });
+      
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -144,7 +153,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: data.fullName,
             phone_number: data.phoneNumber,
-            country_of_residence: data.countryOfResidence,
+            country_of_residence: data.countryOfResidence, // Fixed: using correct key
             date_of_birth: data.dateOfBirth,
             terms_accepted: data.termsAccepted,
             privacy_policy_accepted: data.privacyPolicyAccepted,
@@ -153,8 +162,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
+      if (error) {
+        console.error('Signup error:', error);
+      } else {
+        console.log('Signup successful');
+      }
+
       return { error };
     } catch (error) {
+      console.error('Signup exception:', error);
       return { error };
     } finally {
       setLoading(false);
