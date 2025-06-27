@@ -12,19 +12,29 @@ import { toast } from '@/hooks/use-toast';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loading } = useAuth();
+  const { signIn, loading } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
-      await login(email, password);
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-      navigate('/dashboard');
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully logged in.",
+        });
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast({
         title: "Login failed",
@@ -51,7 +61,7 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.email')}</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
                 type="email"
@@ -62,7 +72,7 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t('auth.password')}</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -77,7 +87,7 @@ const Login = () => {
               className="w-full bg-emerald-600 hover:bg-emerald-700"
               disabled={loading}
             >
-              {loading ? t('common.loading') : t('auth.login')}
+              {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
           

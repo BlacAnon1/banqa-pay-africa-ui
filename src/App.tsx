@@ -23,6 +23,10 @@ import Wallet from "./pages/Wallet";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
+// Profile and KYC Pages
+import ProfileCompletion from "./components/profile/ProfileCompletion";
+import DocumentUpload from "./components/kyc/DocumentUpload";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -49,6 +53,8 @@ const App = () => (
                   <Route path="history" element={<History />} />
                   <Route path="wallet" element={<Wallet />} />
                   <Route path="support" element={<Support />} />
+                  <Route path="profile/complete" element={<ProfileCompletion />} />
+                  <Route path="kyc/documents" element={<DocumentUpload />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />

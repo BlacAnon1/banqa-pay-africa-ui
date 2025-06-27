@@ -33,7 +33,7 @@ export function TopBar() {
   const [selectedCountry, setSelectedCountry] = useState(countries[0]);
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
-  const { user } = useAuth();
+  const { profile } = useAuth();
 
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
@@ -101,12 +101,12 @@ export function TopBar() {
           {/* User Menu */}
           <div className="flex items-center gap-2">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium">{user?.fullName}</p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <p className="text-sm font-medium">{profile?.full_name || 'User'}</p>
+              <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">
-                {user?.fullName?.charAt(0)}
+                {profile?.full_name?.charAt(0) || 'U'}
               </span>
             </div>
           </div>

@@ -1,80 +1,223 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
-interface User {
+interface UserProfile {
   id: string;
   email: string;
-  fullName: string;
-  phoneNumber?: string;
+  full_name: string;
+  phone_number?: string;
+  date_of_birth?: string;
+  gender?: string;
+  nationality?: string;
+  country_of_residence: string;
+  state_province?: string;
+  city?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  postal_code?: string;
+  occupation?: string;
+  employer?: string;
+  monthly_income?: number;
+  source_of_funds?: string;
+  user_status?: string;
+  verification_level?: string;
+  profile_completed?: boolean;
+  terms_accepted?: boolean;
+  privacy_policy_accepted?: boolean;
+  marketing_consent?: boolean;
+  two_factor_enabled?: boolean;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
+  profile: UserProfile | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
-  logout: () => void;
   loading: boolean;
+  signUp: (data: SignUpData) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  updateProfile: (profileData: Partial<UserProfile>) => Promise<{ error: any }>;
+  refreshProfile: () => Promise<void>;
 }
 
-interface RegisterData {
+interface SignUpData {
   email: string;
   password: string;
   fullName: string;
   phoneNumber?: string;
+  countryOfResidence: string;
+  dateOfBirth?: string;
+  termsAccepted: boolean;
+  privacyPolicyAccepted: boolean;
+  marketingConsent?: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, password: string) => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock user data
-    const mockUser: User = {
-      id: '1',
-      email,
-      fullName: 'John Doe',
-      phoneNumber: '+234 123 456 7890'
-    };
-    
-    setUser(mockUser);
-    setLoading(false);
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
   };
 
-  const register = async (userData: RegisterData) => {
-    setLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newUser: User = {
-      id: Math.random().toString(),
-      email: userData.email,
-      fullName: userData.fullName,
-      phoneNumber: userData.phoneNumber
-    };
-    
-    setUser(newUser);
-    setLoading(false);
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user.id);
+    }
   };
 
-  const logout = () => {
-    setUser(null);
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile when authenticated
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      }
+      
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signUp = async (data: SignUpData) => {
+    try {
+      setLoading(true);
+      
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: data.fullName,
+            phone_number: data.phoneNumber,
+            country_of_residence: data.countryOfResidence,
+            date_of_birth: data.dateOfBirth,
+            terms_accepted: data.termsAccepted,
+            privacy_policy_accepted: data.privacyPolicyAccepted,
+            marketing_consent: data.marketingConsent || false
+          }
+        }
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProfile = async (profileData: Partial<UserProfile>) => {
+    try {
+      if (!user) return { error: 'No authenticated user' };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileData)
+        .eq('id', user.id);
+
+      if (!error) {
+        await refreshProfile();
+      }
+
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   return (
     <AuthContext.Provider value={{
       user,
+      session,
+      profile,
       isAuthenticated: !!user,
-      login,
-      register,
-      logout,
-      loading
+      loading,
+      signUp,
+      signIn,
+      signOut,
+      updateProfile,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>
