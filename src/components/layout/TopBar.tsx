@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { BanqaLogo } from '@/components/ui/BanqaLogo';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,9 @@ export function TopBar() {
       <div className="flex items-center justify-between h-full px-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-primary/10 hover:text-primary rounded-lg transition-colors" />
+          <div className="md:hidden">
+            <BanqaLogo size="sm" variant="icon" />
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -94,8 +98,8 @@ export function TopBar() {
           {/* Notifications */}
           <Button variant="outline" size="sm" className="relative border-primary/20 hover:border-primary rounded-xl">
             <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-2 -right-2 px-1 py-0 text-xs h-5 w-5 rounded-full bg-accent hover:bg-accent">
-              3
+            <Badge className="absolute -top-2 -right-2 px-1 py-0 text-xs h-5 w-5 rounded-full bg-accent hover:bg-accent opacity-0">
+              0
             </Badge>
           </Button>
 
@@ -112,7 +116,9 @@ export function TopBar() {
           {/* User Menu */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-semibold text-foreground">{profile?.full_name || 'User'}</p>
+              <p className="text-sm font-semibold text-foreground">
+                {profile?.full_name || t('common.user')}
+              </p>
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
             <div className="w-10 h-10 banqa-gradient rounded-full flex items-center justify-center shadow-lg cultural-card">

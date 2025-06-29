@@ -1,328 +1,390 @@
-
-import React, { createContext, useContext, useState } from 'react';
-
-type Language = 'en' | 'fr' | 'sw' | 'ha';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  language: string;
+  setLanguage: (language: string) => void;
+  t: (key: string, vars?: { [key: string]: string | number }) => string;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+interface LanguageProviderProps {
+  children: React.ReactNode;
 }
 
 const translations = {
   en: {
-    // Navigation
-    'nav.dashboard': 'Dashboard',
-    'nav.payBills': 'Pay Bills',
-    'nav.history': 'Transaction History',
-    'nav.wallet': 'My Wallet',
-    'nav.support': 'Customer Support',
-    
-    // Authentication
-    'auth.login': 'Sign In',
-    'auth.register': 'Create Account',
-    'auth.email': 'Email Address',
-    'auth.password': 'Password',
-    'auth.confirmPassword': 'Confirm Password',
-    'auth.fullName': 'Full Name',
-    'auth.phoneNumber': 'Phone Number',
-    'auth.welcome': 'Welcome to Banqa',
-    'auth.subtitle': 'Pay Africa with Confidence',
-    'auth.loginSubtitle': 'Access your digital wallet',
-    'auth.registerSubtitle': 'Join thousands of satisfied customers',
-    
-    // Common
-    'common.submit': 'Submit',
-    'common.cancel': 'Cancel',
-    'common.loading': 'Loading...',
-    'common.save': 'Save',
-    'common.edit': 'Edit',
-    'common.delete': 'Delete',
-    'common.confirm': 'Confirm',
-    'common.close': 'Close',
-    
-    // Dashboard
-    'dashboard.welcome': 'Karibu',
-    'dashboard.subtitle': 'Your financial journey across Africa',
-    'dashboard.balance': 'Wallet Balance',
-    'dashboard.totalSpent': 'Total Spent',
-    'dashboard.billsPaid': 'Bills Paid',
-    'dashboard.upcomingBills': 'Upcoming Bills',
-    'dashboard.quickPay': 'Quick Pay',
-    'dashboard.quickPaySubtitle': 'Pay your most used services',
-    'dashboard.recentTransactions': 'Recent Transactions',
-    'dashboard.recentTransactionsSubtitle': 'Your latest payments',
-    'dashboard.thisMonth': 'This month',
-    'dashboard.dueSoon': 'Due soon',
-    
-    // Bills & Services
-    'bills.electricity': 'Electricity',
-    'bills.water': 'Water Bills',
-    'bills.internet': 'Internet & WiFi',
-    'bills.taxes': 'Government Taxes',
-    'bills.waste': 'Waste Management',
-    'bills.tv': 'TV Subscription',
-    'bills.airtime': 'Airtime & Data',
-    'bills.flight': 'Flight Booking',
-    'bills.insurance': 'Insurance',
-    'bills.school': 'School Fees',
-    
-    // Transaction Status
-    'status.completed': 'Completed',
-    'status.pending': 'Pending',
-    'status.failed': 'Failed',
-    'status.due': 'Due',
-    'status.upcoming': 'Upcoming',
-    
-    // Countries
-    'countries.nigeria': 'Nigeria',
-    'countries.kenya': 'Kenya',
-    'countries.ghana': 'Ghana',
-    'countries.southafrica': 'South Africa',
-    'countries.egypt': 'Egypt',
-    
-    // Company
-    'company.name': 'Banqa',
-    'company.tagline': 'Pay Africa',
-    'company.description': 'Your trusted partner for digital payments across Africa',
+    company: {
+      name: 'Banqa',
+      tagline: 'Financial Freedom for Africa',
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      payBills: 'Pay Bills',
+      history: 'History',
+      wallet: 'Wallet',
+      support: 'Support',
+    },
+    dashboard: {
+      welcome: 'Welcome',
+      subtitle: 'Your financial hub for seamless transactions and bill payments.',
+      balance: 'Wallet Balance',
+      billsPaid: 'Bills Paid',
+      totalSpent: 'Total Spent',
+      thisMonth: 'This Month',
+      upcomingBills: 'Upcoming Bills',
+      dueSoon: 'Due Soon',
+      quickPay: 'Quick Pay',
+      quickPaySubtitle: 'Pay your bills faster',
+      recentTransactions: 'Recent Transactions',
+      recentTransactionsSubtitle: 'Your latest transactions',
+      addFunds: 'Add Funds',
+      needsAttention: 'Needs Attention',
+      noTransactions: 'No recent transactions',
+      startPaying: 'Start Paying Bills',
+      pendingBills: 'Pending Bills',
+    },
+    bills: {
+      electricity: 'Electricity Bill',
+      internet: 'Internet Bill',
+      water: 'Water Bill',
+      tv: 'TV Subscription',
+      airtime: 'Airtime Recharge',
+      insurance: 'Insurance Premium',
+      school: 'School Fees',
+      taxes: 'Taxes',
+    },
+    countries: {
+      nigeria: 'Nigeria',
+      kenya: 'Kenya',
+      ghana: 'Ghana',
+      southafrica: 'South Africa',
+      egypt: 'Egypt',
+    },
+    status: {
+      due: 'Due',
+      upcoming: 'Upcoming',
+      completed: 'Completed',
+      failed: 'Failed',
+      pending: 'Pending',
+    },
+    common: {
+      user: 'User',
+      friend: 'Friend',
+      loading: 'Loading...',
+      error: 'Error',
+      success: 'Success',
+      cancel: 'Cancel',
+      save: 'Save',
+      edit: 'Edit',
+      delete: 'Delete',
+      confirm: 'Confirm',
+    },
+    nav: {
+      mainMenu: 'Main Menu',
+      logout: 'Logout',
+    },
+    history: {
+      title: 'Transaction History',
+      subtitle: 'View and manage your payment history',
+      filterTitle: 'Filter Transactions',
+      searchPlaceholder: 'Search by service, provider, or reference...',
+      filterPlaceholder: 'Filter by status',
+      allStatus: 'All Status',
+      export: 'Export',
+      recentTransactions: 'Recent Transactions',
+      showingResults: 'Showing {count} of {total} transactions',
+      transaction: 'Transaction',
+      banqa: 'Banqa',
+      reference: 'Reference',
+      noTransactions: 'No transactions found',
+    },
   },
   fr: {
-    // Navigation
-    'nav.dashboard': 'Tableau de bord',
-    'nav.payBills': 'Payer les factures',
-    'nav.history': 'Historique des transactions',
-    'nav.wallet': 'Mon portefeuille',
-    'nav.support': 'Support client',
-    
-    // Authentication
-    'auth.login': 'Se connecter',
-    'auth.register': 'Créer un compte',
-    'auth.email': 'Adresse e-mail',
-    'auth.password': 'Mot de passe',
-    'auth.confirmPassword': 'Confirmer le mot de passe',
-    'auth.fullName': 'Nom complet',
-    'auth.phoneNumber': 'Numéro de téléphone',
-    'auth.welcome': 'Bienvenue chez Banqa',
-    'auth.subtitle': 'Payez l\'Afrique en toute confiance',
-    'auth.loginSubtitle': 'Accédez à votre portefeuille numérique',
-    'auth.registerSubtitle': 'Rejoignez des milliers de clients satisfaits',
-    
-    // Common
-    'common.submit': 'Soumettre',
-    'common.cancel': 'Annuler',
-    'common.loading': 'Chargement...',
-    'common.save': 'Enregistrer',
-    'common.edit': 'Modifier',
-    'common.delete': 'Supprimer',
-    'common.confirm': 'Confirmer',
-    'common.close': 'Fermer',
-    
-    // Dashboard
-    'dashboard.welcome': 'Karibu',
-    'dashboard.subtitle': 'Votre parcours financier à travers l\'Afrique',
-    'dashboard.balance': 'Solde du portefeuille',
-    'dashboard.totalSpent': 'Total dépensé',
-    'dashboard.billsPaid': 'Factures payées',
-    'dashboard.upcomingBills': 'Factures à venir',
-    'dashboard.quickPay': 'Paiement rapide',
-    'dashboard.quickPaySubtitle': 'Payez vos services les plus utilisés',
-    'dashboard.recentTransactions': 'Transactions récentes',
-    'dashboard.recentTransactionsSubtitle': 'Vos derniers paiements',
-    'dashboard.thisMonth': 'Ce mois-ci',
-    'dashboard.dueSoon': 'Bientôt dû',
-    
-    // Bills & Services
-    'bills.electricity': 'Électricité',
-    'bills.water': 'Factures d\'eau',
-    'bills.internet': 'Internet et WiFi',
-    'bills.taxes': 'Taxes gouvernementales',
-    'bills.waste': 'Gestion des déchets',
-    'bills.tv': 'Abonnement TV',
-    'bills.airtime': 'Crédit et données',
-    'bills.flight': 'Réservation de vol',
-    'bills.insurance': 'Assurance',
-    'bills.school': 'Frais de scolarité',
-    
-    // Transaction Status
-    'status.completed': 'Terminé',
-    'status.pending': 'En attente',
-    'status.failed': 'Échoué',
-    'status.due': 'Dû',
-    'status.upcoming': 'À venir',
-    
-    // Countries
-    'countries.nigeria': 'Nigeria',
-    'countries.kenya': 'Kenya',
-    'countries.ghana': 'Ghana',
-    'countries.southafrica': 'Afrique du Sud',
-    'countries.egypt': 'Égypte',
-    
-    // Company
-    'company.name': 'Banqa',
-    'company.tagline': 'Payez l\'Afrique',
-    'company.description': 'Votre partenaire de confiance pour les paiements numériques en Afrique',
+    company: {
+      name: 'Banqa',
+      tagline: 'La liberté financière pour l\'Afrique',
+    },
+    nav: {
+      dashboard: 'Tableau de bord',
+      payBills: 'Payer les factures',
+      history: 'Historique',
+      wallet: 'Portefeuille',
+      support: 'Support',
+    },
+    dashboard: {
+      welcome: 'Bienvenue',
+      subtitle: 'Votre centre financier pour des transactions et des paiements de factures transparents.',
+      balance: 'Solde du portefeuille',
+      billsPaid: 'Factures payées',
+      totalSpent: 'Total dépensé',
+      thisMonth: 'Ce mois-ci',
+      upcomingBills: 'Factures à venir',
+      dueSoon: 'Bientôt dû',
+      quickPay: 'Paiement rapide',
+      quickPaySubtitle: 'Payez vos factures plus rapidement',
+      recentTransactions: 'Transactions récentes',
+      recentTransactionsSubtitle: 'Vos dernières transactions',
+      addFunds: 'Ajouter des Fonds',
+      needsAttention: 'Nécessite une Attention',
+      noTransactions: 'Aucune transaction récente',
+      startPaying: 'Commencer à Payer',
+      pendingBills: 'Factures en Attente',
+    },
+    bills: {
+      electricity: 'Facture d\'électricité',
+      internet: 'Facture Internet',
+      water: 'Facture d\'eau',
+      tv: 'Abonnement TV',
+      airtime: 'Recharge de temps d\'antenne',
+      insurance: 'Prime d\'assurance',
+      school: 'Frais de scolarité',
+      taxes: 'Taxes',
+    },
+    countries: {
+      nigeria: 'Nigéria',
+      kenya: 'Kenya',
+      ghana: 'Ghana',
+      southafrica: 'Afrique du Sud',
+      egypt: 'Égypte',
+    },
+    status: {
+      due: 'Dû',
+      upcoming: 'À venir',
+      completed: 'Terminé',
+      failed: 'Échoué',
+      pending: 'En attente',
+    },
+    common: {
+      user: 'Utilisateur',
+      friend: 'Ami',
+      loading: 'Chargement...',
+      error: 'Erreur',
+      success: 'Succès',
+      cancel: 'Annuler',
+      save: 'Enregistrer',
+      edit: 'Modifier',
+      delete: 'Supprimer',
+      confirm: 'Confirmer',
+    },
+    nav: {
+      mainMenu: 'Menu Principal',
+      logout: 'Déconnexion',
+    },
+    history: {
+      title: 'Historique des Transactions',
+      subtitle: 'Consultez et gérez votre historique de paiement',
+      filterTitle: 'Filtrer les Transactions',
+      searchPlaceholder: 'Rechercher par service, fournisseur ou référence...',
+      filterPlaceholder: 'Filtrer par statut',
+      allStatus: 'Tous les Statuts',
+      export: 'Exporter',
+      recentTransactions: 'Transactions Récentes',
+      showingResults: 'Affichage de {count} sur {total} transactions',
+      transaction: 'Transaction',
+      banqa: 'Banqa',
+      reference: 'Référence',
+      noTransactions: 'Aucune transaction trouvée',
+    },
   },
   sw: {
-    // Navigation
-    'nav.dashboard': 'Dashibodi',
-    'nav.payBills': 'Lipa Bili',
-    'nav.history': 'Historia ya Miamala',
-    'nav.wallet': 'Mkoba Wangu',
-    'nav.support': 'Huduma kwa Wateja',
-    
-    // Authentication
-    'auth.login': 'Ingia',
-    'auth.register': 'Fungua Akaunti',
-    'auth.email': 'Barua pepe',
-    'auth.password': 'Nenosiri',
-    'auth.confirmPassword': 'Thibitisha nenosiri',
-    'auth.fullName': 'Jina kamili',
-    'auth.phoneNumber': 'Nambari ya simu',
-    'auth.welcome': 'Karibu Banqa',
-    'auth.subtitle': 'Lipa Afrika kwa Ujasiri',
-    'auth.loginSubtitle': 'Ingia kwenye mkoba wako wa kidijitali',
-    'auth.registerSubtitle': 'Jiunge na maelfu ya wateja wenye furaha',
-    
-    // Common
-    'common.submit': 'Wasilisha',
-    'common.cancel': 'Ghairi',
-    'common.loading': 'Inapakia...',
-    'common.save': 'Hifadhi',
-    'common.edit': 'Hariri',
-    'common.delete': 'Futa',
-    'common.confirm': 'Thibitisha',
-    'common.close': 'Funga',
-    
-    // Dashboard
-    'dashboard.welcome': 'Karibu',
-    'dashboard.subtitle': 'Safari yako ya kifedha kupitia Afrika',
-    'dashboard.balance': 'Salio la Mkoba',
-    'dashboard.totalSpent': 'Jumla Iliyotumika',
-    'dashboard.billsPaid': 'Bili Zilizolipiwa',
-    'dashboard.upcomingBills': 'Bili Zijazo',
-    'dashboard.quickPay': 'Malipo ya Haraka',
-    'dashboard.quickPaySubtitle': 'Lipa huduma zako za mara kwa mara',
-    'dashboard.recentTransactions': 'Miamala ya Hivi Karibuni',
-    'dashboard.recentTransactionsSubtitle': 'Malipo yako ya mwisho',
-    'dashboard.thisMonth': 'Mwezi huu',
-    'dashboard.dueSoon': 'Itadaiwa hivi karibuni',
-    
-    // Bills & Services
-    'bills.electricity': 'Umeme',
-    'bills.water': 'Bili za Maji',
-    'bills.internet': 'Mtandao na WiFi',
-    'bills.taxes': 'Kodi za Serikali',
-    'bills.waste': 'Usimamizi wa Taka',
-    'bills.tv': 'Ujazo wa TV',
-    'bills.airtime': 'Muda wa anga na Data',
-    'bills.flight': 'Uhifadhi wa Ndege',
-    'bills.insurance': 'Bima',
-    'bills.school': 'Ada za Shule',
-    
-    // Transaction Status
-    'status.completed': 'Imekamilika',
-    'status.pending': 'Inasubiri',
-    'status.failed': 'Imeshindwa',
-    'status.due': 'Inadaiwa',
-    'status.upcoming': 'Ijayo',
-    
-    // Countries
-    'countries.nigeria': 'Nigeria',
-    'countries.kenya': 'Kenya',
-    'countries.ghana': 'Ghana',
-    'countries.southafrica': 'Afrika Kusini',
-    'countries.egypt': 'Misri',
-    
-    // Company
-    'company.name': 'Banqa',
-    'company.tagline': 'Lipa Afrika',
-    'company.description': 'Mshirika wako wa kuaminika kwa malipo ya kidijitali Afrika nzima',
+    company: {
+      name: 'Banqa',
+      tagline: 'Uhuru wa Kifedha kwa Afrika',
+    },
+    nav: {
+      dashboard: 'Dashibodi',
+      payBills: 'Lipa Bili',
+      history: 'Historia',
+      wallet: 'Pochi',
+      support: 'Msaada',
+    },
+    dashboard: {
+      welcome: 'Karibu',
+      subtitle: 'Kitovu chako cha kifedha kwa shughuli na malipo ya bili bila mshono.',
+      balance: 'Salio la Pochi',
+      billsPaid: 'Bili Zilizolipwa',
+      totalSpent: 'Jumla Iliyotumika',
+      thisMonth: 'Mwezi Huu',
+      upcomingBills: 'Bili Zinazokuja',
+      dueSoon: 'Inakaribia',
+      quickPay: 'Malipo ya Haraka',
+      quickPaySubtitle: 'Lipa bili zako haraka zaidi',
+      recentTransactions: 'Shughuli za Hivi Karibuni',
+      recentTransactionsSubtitle: 'Shughuli zako za hivi karibuni',
+      addFunds: 'Ongeza Fedha',
+      needsAttention: 'Inahitaji Umakini',
+      noTransactions: 'Hakuna shughuli za hivi karibuni',
+      startPaying: 'Anza Kulipa',
+      pendingBills: 'Bili Zinazongoja',
+    },
+    bills: {
+      electricity: 'Bili ya Umeme',
+      internet: 'Bili ya Mtandao',
+      water: 'Bili ya Maji',
+      tv: 'Usajili wa TV',
+      airtime: 'Ujazaji wa Muda wa Maongezi',
+      insurance: 'Malipo ya Bima',
+      school: 'Ada za Shule',
+      taxes: 'Kodi',
+    },
+    countries: {
+      nigeria: 'Nigeria',
+      kenya: 'Kenya',
+      ghana: 'Ghana',
+      southafrica: 'Afrika Kusini',
+      egypt: 'Misri',
+    },
+    status: {
+      due: 'Inastahili',
+      upcoming: 'Inakuja',
+      completed: 'Imekamilika',
+      failed: 'Imeishindikana',
+      pending: 'Inasubiriwa',
+    },
+    common: {
+      user: 'Mtumiaji',
+      friend: 'Rafiki',
+      loading: 'Inapakia...',
+      error: 'Kosa',
+      success: 'Mafanikio',
+      cancel: 'Ghairi',
+      save: 'Hifadhi',
+      edit: 'Hariri',
+      delete: 'Futa',
+      confirm: 'Thibitisha',
+    },
+    nav: {
+      mainMenu: 'Menyu Kuu',
+      logout: 'Ondoka',
+    },
+    history: {
+      title: 'Historia ya Shughuli',
+      subtitle: 'Angalia na udhibiti historia yako ya malipo',
+      filterTitle: 'Chuja Shughuli',
+      searchPlaceholder: 'Tafuta kwa huduma, mtoa huduma, au rejeleo...',
+      filterPlaceholder: 'Chuja kwa hali',
+      allStatus: 'Hali Zote',
+      export: 'Hamisha',
+      recentTransactions: 'Shughuli za Hivi Karibuni',
+      showingResults: 'Inaonyesha {count} kati ya shughuli {total}',
+      transaction: 'Shughuli',
+      banqa: 'Banqa',
+      reference: 'Rejeleo',
+      noTransactions: 'Hakuna shughuli zilizopatikana',
+    },
   },
   ha: {
-    // Navigation
-    'nav.dashboard': 'Dashboard',
-    'nav.payBills': 'Biyan Kudade',
-    'nav.history': 'Tarihin Ma\'amala',
-    'nav.wallet': 'Jakata',
-    'nav.support': 'Tallafin Abokai',
-    
-    // Authentication
-    'auth.login': 'Shiga',
-    'auth.register': 'Bude Asusun',
-    'auth.email': 'Adireshin Imel',
-    'auth.password': 'Kalmar Sirri',
-    'auth.confirmPassword': 'Tabbatar da kalmar sirri',
-    'auth.fullName': 'Cikakken Suna',
-    'auth.phoneNumber': 'Lambar Waya',
-    'auth.welcome': 'Maraba da Banqa',
-    'auth.subtitle': 'Biyan Afrika da Kwarin Gwiwa',
-    'auth.loginSubtitle': 'Shiga cikin jakar kudin dijital',
-    'auth.registerSubtitle': 'Shiga cikin dubban abokan ciniki masu jin dadi',
-    
-    // Common
-    'common.submit': 'Aikawa',
-    'common.cancel': 'Soke',
-    'common.loading': 'Ana lodawa...',
-    'common.save': 'Adana',
-    'common.edit': 'Gyara',
-    'common.delete': 'Share',
-    'common.confirm': 'Tabbata',
-    'common.close': 'Rufe',
-    
-    // Dashboard
-    'dashboard.welcome': 'Karibu',
-    'dashboard.subtitle': 'Tafiyar ku ta kudin cikin Afrika',
-    'dashboard.balance': 'Ma\'aunin Jaka',
-    'dashboard.totalSpent': 'Jimlar Kashe',
-    'dashboard.billsPaid': 'Kudaden da aka Biya',
-    'dashboard.upcomingBills': 'Kudaden da za su Zo',
-    'dashboard.quickPay': 'Biyan Gaggawa',
-    'dashboard.quickPaySubtitle': 'Biya ayyukan da kuke amfani da su',
-    'dashboard.recentTransactions': 'Ma\'amaloli na Kwanan nan',
-    'dashboard.recentTransactionsSubtitle': 'Biyan kudin ku na baya-bayan nan',
-    'dashboard.thisMonth': 'Wannan wata',
-    'dashboard.dueSoon': 'Zai kamata nan ba da jimawa ba',
-    
-    // Bills & Services
-    'bills.electricity': 'Wutar Lantarki',
-    'bills.water': 'Kudaden Ruwa',
-    'bills.internet': 'Intanet da WiFi',
-    'bills.taxes': 'Harajin Gwamnati',
-    'bills.waste': 'Sarrafa Datti',
-    'bills.tv': 'Biyan TV',
-    'bills.airtime': 'Lokacin Iska da Bayanai',
-    'bills.flight': 'Ajiyar Jirgin Sama',
-    'bills.insurance': 'Inshora',
-    'bills.school': 'Kudin Makaranta',
-    
-    // Transaction Status
-    'status.completed': 'An Gama',
-    'status.pending': 'Yana Jira',
-    'status.failed': 'Ya Kasa',
-    'status.due': 'Ya Wajaba',
-    'status.upcoming': 'Mai Zuwa',
-    
-    // Countries
-    'countries.nigeria': 'Najeriya',
-    'countries.kenya': 'Kenya',
-    'countries.ghana': 'Ghana',
-    'countries.southafrica': 'Afirka ta Kudu',
-    'countries.egypt': 'Masar',
-    
-    // Company
-    'company.name': 'Banqa',
-    'company.tagline': 'Biyan Afrika',
-    'company.description': 'Abokin ciniki mai amana don biyan kudin dijital a duk faɗin Afrika',
+    company: {
+      name: 'Banqa',
+      tagline: 'Yancin Kuɗi ga Afirka',
+    },
+    nav: {
+      dashboard: 'Dashboard',
+      payBills: 'Biyan Kuɗi',
+      history: 'Tarihi',
+      wallet: 'Wallet',
+      support: 'Taimako',
+    },
+    dashboard: {
+      welcome: 'Barka da zuwa',
+      subtitle: 'Cibiyar ku ta kuɗi don ma'amaloli marasa matsala da biyan kuɗi.',
+      balance: 'Wallet Balance',
+      billsPaid: 'Kuɗaɗen da Aka Biya',
+      totalSpent: 'Jimlar Kuɗin da Aka Kashe',
+      thisMonth: 'Wannan Watan',
+      upcomingBills: 'Kuɗaɗen da Ke Tafe',
+      dueSoon: 'Nan Ba da Jimawa Ba',
+      quickPay: 'Biyan Kuɗi Mai Sauri',
+      quickPaySubtitle: 'Biya kuɗin ku da sauri',
+      recentTransactions: 'Ma'amaloli na Kwanan Nan',
+      recentTransactionsSubtitle: 'Ma'amalolin ku na ƙarshe',
+      addFunds: 'Kara Kudi',
+      needsAttention: 'Yana Bukatar Kulawa',
+      noTransactions: 'Babu wani ciniki na baya-bayan nan',
+      startPaying: 'Fara Biyan Kudade',
+      pendingBills: 'Kudaden da Suke Jira',
+    },
+    bills: {
+      electricity: 'Kuɗin Lantarki',
+      internet: 'Kuɗin Intanet',
+      water: 'Kuɗin Ruwa',
+      tv: 'Biyan Kuɗin TV',
+      airtime: 'Sake Cajin Lokacin Magana',
+      insurance: 'Kuɗin Inshora',
+      school: 'Kuɗin Makaranta',
+      taxes: 'Haraji',
+    },
+    countries: {
+      nigeria: 'Najeriya',
+      kenya: 'Kenya',
+      ghana: 'Ghana',
+      southafrica: 'Afirka ta Kudu',
+      egypt: 'Masar',
+    },
+    status: {
+      due: 'Ya Kamata',
+      upcoming: 'Mai Zuwa',
+      completed: 'An Kammala',
+      failed: 'Ya Gagara',
+      pending: 'Ana Jira',
+    },
+    common: {
+      user: 'Mai amfani',
+      friend: 'Aboki',
+      loading: 'Ana loadawa...',
+      error: 'Kuskure',
+      success: 'Nasara',
+      cancel: 'Soke',
+      save: 'Ajiye',
+      edit: 'Gyara',
+      delete: 'Share',
+      confirm: 'Tabbatar',
+    },
+    nav: {
+      mainMenu: 'Babban Menu',
+      logout: 'Fita',
+    },
+    history: {
+      title: 'Tarihin Ma\'amala',
+      subtitle: 'Duba da sarrafa tarihin biyan ku',
+      filterTitle: 'Tace Ma\'amaloli',
+      searchPlaceholder: 'Bincika ta hanyar sabis, mai bada sabis, ko tunani...',
+      filterPlaceholder: 'Tace ta matsayi',
+      allStatus: 'Duk Matsayi',
+      export: 'Fitarwa',
+      recentTransactions: 'Ma\'amaloli na Kwanan Nan',
+      showingResults: 'Nuna {count} na ma\'amaloli {total}',
+      transaction: 'Ma\'amala',
+      banqa: 'Banqa',
+      reference: 'Nuni',
+      noTransactions: 'Babu ma\'amaloli da aka samo',
+    },
   },
 };
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
 
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
 
-  const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations.en] || key;
+  const t = (key: string, vars: { [key: string]: string | number } = {}) => {
+    let translation = translations[language as keyof typeof translations]?.[key];
+
+    if (!translation) {
+      translation = translations['en'][key];
+      if (!translation) {
+        return key;
+      }
+    }
+
+    Object.entries(vars).forEach(([key, value]) => {
+      translation = translation!.replace(`{${key}}`, String(value));
+    });
+
+    return translation || key;
   };
 
   return (

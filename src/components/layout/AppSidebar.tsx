@@ -14,6 +14,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { BanqaLogo } from '@/components/ui/BanqaLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -38,23 +39,16 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible="offcanvas">
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 banqa-gradient rounded-xl flex items-center justify-center shadow-lg cultural-card">
-            <span className="text-white font-bold text-lg">B</span>
-          </div>
-          {!collapsed && (
-            <div>
-              <h2 className="font-bold text-xl text-primary">{t('company.name')}</h2>
-              <p className="text-xs text-muted-foreground font-medium">{t('company.tagline')}</p>
-            </div>
-          )}
-        </div>
+        <BanqaLogo 
+          size={collapsed ? 'sm' : 'md'} 
+          variant={collapsed ? 'icon' : 'full'} 
+        />
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-primary font-semibold">
-            {!collapsed && 'Main Menu'}
+            {!collapsed && t('nav.mainMenu')}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -89,7 +83,7 @@ export function AppSidebar() {
           className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          {!collapsed && <span className="font-medium">Logout</span>}
+          {!collapsed && <span className="font-medium">{t('nav.logout')}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>

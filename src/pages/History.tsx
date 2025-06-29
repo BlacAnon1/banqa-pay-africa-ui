@@ -1,43 +1,92 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Filter, Download } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const History = () => {
+  const { user } = useAuth();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const transactions = [
-    { id: 'TXN001', service: 'Electricity', provider: 'Ikeja Electric', amount: '₦15,500', date: '2024-12-25', status: 'completed', reference: 'IKE123456789' },
-    { id: 'TXN002', service: 'Airtime', provider: 'MTN', amount: '₦2,000', date: '2024-12-24', status: 'completed', reference: 'MTN987654321' },
-    { id: 'TXN003', service: 'DSTV', provider: 'DSTV', amount: '₦8,500', date: '2024-12-23', status: 'completed', reference: 'DST456789123' },
-    { id: 'TXN004', service: 'Internet', provider: 'Spectranet', amount: '₦12,000', date: '2024-12-22', status: 'failed', reference: 'SPE789123456' },
-    { id: 'TXN005', service: 'Water', provider: 'Lagos Water', amount: '₦3,200', date: '2024-12-21', status: 'completed', reference: 'LWC321654987' },
-  ];
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching transactions:', error);
+        } else {
+          setTransactions(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [user]);
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (transaction.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (transaction.service_type || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (transaction.reference_number || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || transaction.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-NG', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Transaction History</h1>
-        <p className="text-muted-foreground">View and manage your payment history</p>
+        <h1 className="text-3xl font-bold text-foreground">{t('history.title')}</h1>
+        <p className="text-muted-foreground">{t('history.subtitle')}</p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Transactions</CardTitle>
+          <CardTitle>{t('history.filterTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -45,7 +94,7 @@ const History = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by service, provider, or reference..."
+                  placeholder={t('history.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -54,18 +103,18 @@ const History = () => {
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t('history.filterPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="all">{t('history.allStatus')}</SelectItem>
+                <SelectItem value="completed">{t('status.completed')}</SelectItem>
+                <SelectItem value="failed">{t('status.failed')}</SelectItem>
+                <SelectItem value="pending">{t('status.pending')}</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              Export
+              {t('history.export')}
             </Button>
           </div>
         </CardContent>
@@ -74,42 +123,51 @@ const History = () => {
       {/* Transactions List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>{t('history.recentTransactions')}</CardTitle>
           <CardDescription>
-            Showing {filteredTransactions.length} of {transactions.length} transactions
+            {t('history.showingResults', { 
+              count: filteredTransactions.length, 
+              total: transactions.length 
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredTransactions.map((transaction) => (
-              <div key={transaction.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                <div className="flex flex-col sm:flex-row justify-between gap-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold">{transaction.service}</h3>
-                      <Badge variant={transaction.status === 'completed' ? 'default' : 
-                                   transaction.status === 'failed' ? 'destructive' : 'secondary'}>
-                        {transaction.status}
-                      </Badge>
+            {filteredTransactions.length > 0 ? (
+              filteredTransactions.map((transaction) => (
+                <div key={transaction.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col sm:flex-row justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-semibold">
+                          {transaction.description || transaction.service_type || t('history.transaction')}
+                        </h3>
+                        <Badge variant={transaction.status === 'completed' ? 'default' : 
+                                     transaction.status === 'failed' ? 'destructive' : 'secondary'}>
+                          {t(`status.${transaction.status}`)}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {transaction.provider_name || t('history.banqa')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('history.reference')}: {transaction.reference_number}
+                      </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{transaction.provider}</p>
-                    <p className="text-xs text-muted-foreground">Ref: {transaction.reference}</p>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <p className="font-bold text-lg">{transaction.amount}</p>
-                    <p className="text-sm text-muted-foreground">{transaction.date}</p>
-                    <p className="text-xs text-muted-foreground">ID: {transaction.id}</p>
+                    <div className="text-right space-y-1">
+                      <p className="font-bold text-lg">{formatCurrency(Number(transaction.amount))}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(transaction.created_at)}</p>
+                      <p className="text-xs text-muted-foreground">ID: {transaction.id.slice(0, 8)}...</p>
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">{t('history.noTransactions')}</p>
               </div>
-            ))}
+            )}
           </div>
-
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No transactions found</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
