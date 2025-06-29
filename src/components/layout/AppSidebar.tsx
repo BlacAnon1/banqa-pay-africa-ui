@@ -30,7 +30,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { t } = useLanguage();
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
   
   const currentPath = location.pathname;
   const isActive = (path: string) => currentPath === path;
@@ -84,7 +84,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <Button
           variant="ghost"
-          onClick={logout}
+          onClick={signOut}
           className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           <LogOut className="h-5 w-5" />
