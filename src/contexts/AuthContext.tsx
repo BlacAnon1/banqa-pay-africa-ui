@@ -44,13 +44,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   signUp: (data: SignUpData) => Promise<{ error: any }>;
-  signUpWithPhone: (data: PhoneSignUpData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithPhone: (phone: string, password: string) => Promise<{ error: any }>;
-  signInWithOTP: (phone: string) => Promise<{ error: any }>;
-  verifyOTP: (phone: string, token: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  logout: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile>) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
 }
@@ -60,17 +55,6 @@ interface SignUpData {
   password: string;
   fullName: string;
   phoneNumber?: string;
-  countryOfResidence: string;
-  dateOfBirth?: string;
-  termsAccepted: boolean;
-  privacyPolicyAccepted: boolean;
-  marketingConsent?: boolean;
-}
-
-interface PhoneSignUpData {
-  phone: string;
-  password: string;
-  fullName: string;
   countryOfResidence: string;
   dateOfBirth?: string;
   termsAccepted: boolean;
@@ -88,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -99,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      console.log('Profile fetched:', data);
       setProfile(data);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -112,6 +98,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -120,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile when authenticated
+          // Use setTimeout to avoid blocking the auth callback
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
@@ -193,98 +181,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUpWithPhone = async (data: PhoneSignUpData) => {
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.auth.signUp({
-        phone: data.phone,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-            country_of_residence: data.countryOfResidence,
-            date_of_birth: data.dateOfBirth,
-            terms_accepted: data.termsAccepted,
-            privacy_policy_accepted: data.privacyPolicyAccepted,
-            marketing_consent: data.marketingConsent || false
-          }
-        }
-      });
-
-      return { error };
-    } catch (error) {
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      
+      console.log('Signing in with email:', email);
       
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      return { error };
-    } catch (error) {
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signInWithPhone = async (phone: string, password: string) => {
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.auth.signInWithPassword({
-        phone,
-        password
-      });
+      if (error) {
+        console.error('Login error:', error);
+      } else {
+        console.log('Login successful');
+      }
 
       return { error };
     } catch (error) {
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signInWithOTP = async (phone: string) => {
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
-        options: {
-          shouldCreateUser: false
-        }
-      });
-
-      return { error };
-    } catch (error) {
-      return { error };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOTP = async (phone: string, token: string) => {
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.auth.verifyOtp({
-        phone,
-        token,
-        type: 'sms'
-      });
-
-      return { error };
-    } catch (error) {
+      console.error('Login exception:', error);
       return { error };
     } finally {
       setLoading(false);
@@ -294,6 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('Signing out');
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
@@ -304,8 +221,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     }
   };
-
-  const logout = signOut;
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
     try {
@@ -342,13 +257,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!user,
       loading,
       signUp,
-      signUpWithPhone,
       signIn,
-      signInWithPhone,
-      signInWithOTP,
-      verifyOTP,
       signOut,
-      logout,
       updateProfile,
       refreshProfile
     }}>

@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 const countries = [
   { code: 'NG', name: 'Nigeria' },
@@ -39,32 +39,100 @@ const Register = () => {
   });
   
   const [step, setStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp, loading } = useAuth();
-  const { t } = useLanguage();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateStep1 = () => {
+    if (!formData.fullName.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast({
+        title: "Missing information",  
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.phoneNumber.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter your phone number.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    if (!formData.countryOfResidence) {
+      toast({
+        title: "Missing information",
+        description: "Please select your country of residence.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (!formData.password) {
+      toast({
+        title: "Missing information",
+        description: "Please create a password.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return false;
+    }
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password mismatch",
         description: "Passwords do not match. Please try again.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
-
     if (!formData.termsAccepted || !formData.privacyPolicyAccepted) {
       toast({
         title: "Agreement required",
         description: "Please accept the Terms of Service and Privacy Policy to continue.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateStep3()) return;
 
     try {
+      console.log('Submitting registration form:', {
+        email: formData.email,
+        fullName: formData.fullName,
+        phoneNumber: formData.phoneNumber,
+        countryOfResidence: formData.countryOfResidence
+      });
+
       const { error } = await signUp({
         email: formData.email,
         password: formData.password,
@@ -78,9 +146,18 @@ const Register = () => {
       });
 
       if (error) {
+        console.error('Registration error:', error);
+        let errorMessage = "Please try again or contact support.";
+        
+        if (error.message?.includes('already registered')) {
+          errorMessage = "This email is already registered. Please try logging in instead.";
+        } else if (error.message?.includes('Invalid email')) {
+          errorMessage = "Please enter a valid email address.";
+        }
+        
         toast({
           title: "Registration failed",
-          description: error.message || "Please try again or contact support.",
+          description: errorMessage,
           variant: "destructive",
         });
       } else {
@@ -91,9 +168,10 @@ const Register = () => {
         navigate('/login');
       }
     } catch (error) {
+      console.error('Registration exception:', error);
       toast({
         title: "Registration failed",
-        description: "Please try again or contact support.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -121,16 +199,8 @@ const Register = () => {
   };
 
   const nextStep = () => {
-    if (step === 1) {
-      if (!formData.fullName || !formData.email || !formData.phoneNumber) {
-        toast({
-          title: "Missing information",
-          description: "Please fill in all required fields.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
+    if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
     setStep(step + 1);
   };
 
@@ -165,6 +235,7 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Enter your full legal name"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -177,6 +248,7 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Enter your email address"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <div className="space-y-2">
@@ -189,12 +261,14 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="+234 123 456 7890"
                     required
+                    disabled={loading}
                   />
                 </div>
                 <Button
                   type="button"
                   onClick={nextStep}
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  disabled={loading}
                 >
                   Continue
                 </Button>
@@ -205,7 +279,10 @@ const Register = () => {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="countryOfResidence">Country of Residence *</Label>
-                  <Select onValueChange={(value) => handleSelectChange('countryOfResidence', value)}>
+                  <Select 
+                    onValueChange={(value) => handleSelectChange('countryOfResidence', value)}
+                    disabled={loading}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your country" />
                     </SelectTrigger>
@@ -226,6 +303,7 @@ const Register = () => {
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
+                    disabled={loading}
                   />
                 </div>
                 <div className="flex space-x-2">
@@ -234,6 +312,7 @@ const Register = () => {
                     onClick={prevStep}
                     variant="outline"
                     className="flex-1"
+                    disabled={loading}
                   >
                     Back
                   </Button>
@@ -241,6 +320,7 @@ const Register = () => {
                     type="button"
                     onClick={nextStep}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    disabled={loading}
                   >
                     Continue
                   </Button>
@@ -252,27 +332,61 @@ const Register = () => {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="password">Create Password *</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Create a strong password"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Create a strong password"
+                      required
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Confirm your password"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                      required
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={loading}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
                 
                 <div className="space-y-3">
@@ -281,6 +395,7 @@ const Register = () => {
                       id="termsAccepted"
                       checked={formData.termsAccepted}
                       onCheckedChange={(checked) => handleCheckboxChange('termsAccepted', checked as boolean)}
+                      disabled={loading}
                     />
                     <Label htmlFor="termsAccepted" className="text-sm">
                       I accept the <Link to="/terms" className="text-emerald-600 hover:underline">Terms of Service</Link> *
@@ -291,6 +406,7 @@ const Register = () => {
                       id="privacyPolicyAccepted"
                       checked={formData.privacyPolicyAccepted}
                       onCheckedChange={(checked) => handleCheckboxChange('privacyPolicyAccepted', checked as boolean)}
+                      disabled={loading}
                     />
                     <Label htmlFor="privacyPolicyAccepted" className="text-sm">
                       I accept the <Link to="/privacy" className="text-emerald-600 hover:underline">Privacy Policy</Link> *
@@ -301,6 +417,7 @@ const Register = () => {
                       id="marketingConsent"
                       checked={formData.marketingConsent}
                       onCheckedChange={(checked) => handleCheckboxChange('marketingConsent', checked as boolean)}
+                      disabled={loading}
                     />
                     <Label htmlFor="marketingConsent" className="text-sm">
                       I agree to receive marketing communications
@@ -314,6 +431,7 @@ const Register = () => {
                     onClick={prevStep}
                     variant="outline"
                     className="flex-1"
+                    disabled={loading}
                   >
                     Back
                   </Button>
