@@ -144,13 +144,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         countryOfResidence: data.countryOfResidence
       });
       
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             full_name: data.fullName,
             phone_number: data.phoneNumber,
@@ -165,11 +162,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Signup error from Supabase:', error);
-      } else {
-        console.log('Signup request sent successfully');
+        return { error };
       }
 
-      return { error };
+      console.log('Signup successful:', authData);
+      return { error: null };
     } catch (error) {
       console.error('Signup exception:', error);
       return { error };

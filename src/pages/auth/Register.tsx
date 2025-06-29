@@ -145,31 +145,16 @@ const Register = () => {
       if (result.error) {
         console.error('Registration error:', result.error);
         
-        let errorMessage = "Registration failed. Please try again.";
-        
-        // Handle specific error types
-        if (result.error.message?.includes('timeout') || result.error.status === 504) {
-          errorMessage = "Registration is taking longer than expected. Please try again in a moment.";
-        } else if (result.error.message?.includes('already registered') || result.error.message?.includes('User already registered')) {
-          errorMessage = "This email is already registered. Please try logging in instead.";
-        } else if (result.error.message?.includes('Invalid email')) {
-          errorMessage = "Please enter a valid email address.";
-        } else if (result.error.message?.includes('Password')) {
-          errorMessage = "Password must be at least 6 characters long.";
-        } else if (result.error.message?.includes('Signup requires a valid password')) {
-          errorMessage = "Please enter a valid password.";
-        }
-        
         toast({
           title: "Registration failed",
-          description: errorMessage,
+          description: result.error.message || "Please try again later.",
           variant: "destructive",
         });
       } else {
         console.log('Registration successful');
         toast({
           title: "Registration successful!",
-          description: "Please check your email to verify your account before signing in.",
+          description: "Please check your email to verify your account.",
         });
         navigate('/login');
       }
@@ -178,7 +163,7 @@ const Register = () => {
       
       toast({
         title: "Registration failed",
-        description: "An unexpected error occurred. Please try again or contact support.",
+        description: "An unexpected error occurred. Please try again later.",
         variant: "destructive",
       });
     } finally {
