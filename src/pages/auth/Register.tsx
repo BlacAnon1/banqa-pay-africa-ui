@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -131,7 +132,7 @@ const Register = () => {
       console.log('Starting registration process...');
       
       // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<{ error: any }>((_, reject) => {
         setTimeout(() => reject(new Error('Registration timeout')), 30000); // 30 second timeout
       });
       
@@ -148,20 +149,20 @@ const Register = () => {
         marketingConsent: formData.marketingConsent,
       });
 
-      const { error } = await Promise.race([signUpPromise, timeoutPromise]);
+      const result = await Promise.race([signUpPromise, timeoutPromise]);
 
-      if (error) {
-        console.error('Registration error:', error);
+      if (result.error) {
+        console.error('Registration error:', result.error);
         
         let errorMessage = "Please try again or contact support.";
         
-        if (error.message?.includes('timeout') || error.message?.includes('504')) {
+        if (result.error.message?.includes('timeout') || result.error.message?.includes('504')) {
           errorMessage = "Registration is taking longer than expected. Please try again in a moment.";
-        } else if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
+        } else if (result.error.message?.includes('already registered') || result.error.message?.includes('already been registered')) {
           errorMessage = "This email is already registered. Please try logging in instead.";
-        } else if (error.message?.includes('Invalid email')) {
+        } else if (result.error.message?.includes('Invalid email')) {
           errorMessage = "Please enter a valid email address.";
-        } else if (error.message?.includes('Password')) {
+        } else if (result.error.message?.includes('Password')) {
           errorMessage = "Password must be at least 6 characters long.";
         }
         
