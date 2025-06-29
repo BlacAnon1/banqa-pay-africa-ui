@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LanguageContextType {
@@ -24,10 +25,12 @@ const translations = {
       history: 'History',
       wallet: 'Wallet',
       support: 'Support',
+      mainMenu: 'Main Menu',
+      logout: 'Logout',
     },
     dashboard: {
       welcome: 'Welcome',
-      subtitle: 'Your financial hub for seamless transactions and bill payments.',
+      subtitle: 'Your digital financial hub for seamless transactions across Africa',
       balance: 'Wallet Balance',
       billsPaid: 'Bills Paid',
       totalSpent: 'Total Spent',
@@ -43,6 +46,11 @@ const translations = {
       noTransactions: 'No recent transactions',
       startPaying: 'Start Paying Bills',
       pendingBills: 'Pending Bills',
+      viewAll: 'View All',
+      payNow: 'Pay Now',
+      getStarted: 'Get Started',
+      loadWallet: 'Load Wallet',
+      connectBank: 'Connect Bank Account',
     },
     bills: {
       electricity: 'Electricity Bill',
@@ -80,10 +88,6 @@ const translations = {
       delete: 'Delete',
       confirm: 'Confirm',
     },
-    nav: {
-      mainMenu: 'Main Menu',
-      logout: 'Logout',
-    },
     history: {
       title: 'Transaction History',
       subtitle: 'View and manage your payment history',
@@ -111,10 +115,12 @@ const translations = {
       history: 'Historique',
       wallet: 'Portefeuille',
       support: 'Support',
+      mainMenu: 'Menu Principal',
+      logout: 'Déconnexion',
     },
     dashboard: {
       welcome: 'Bienvenue',
-      subtitle: 'Votre centre financier pour des transactions et des paiements de factures transparents.',
+      subtitle: 'Votre centre financier numérique pour des transactions transparentes à travers l\'Afrique',
       balance: 'Solde du portefeuille',
       billsPaid: 'Factures payées',
       totalSpent: 'Total dépensé',
@@ -130,6 +136,11 @@ const translations = {
       noTransactions: 'Aucune transaction récente',
       startPaying: 'Commencer à Payer',
       pendingBills: 'Factures en Attente',
+      viewAll: 'Voir Tout',
+      payNow: 'Payer Maintenant',
+      getStarted: 'Commencer',
+      loadWallet: 'Charger le Portefeuille',
+      connectBank: 'Connecter le Compte Bancaire',
     },
     bills: {
       electricity: 'Facture d\'électricité',
@@ -167,10 +178,6 @@ const translations = {
       delete: 'Supprimer',
       confirm: 'Confirmer',
     },
-    nav: {
-      mainMenu: 'Menu Principal',
-      logout: 'Déconnexion',
-    },
     history: {
       title: 'Historique des Transactions',
       subtitle: 'Consultez et gérez votre historique de paiement',
@@ -198,10 +205,12 @@ const translations = {
       history: 'Historia',
       wallet: 'Pochi',
       support: 'Msaada',
+      mainMenu: 'Menyu Kuu',
+      logout: 'Ondoka',
     },
     dashboard: {
       welcome: 'Karibu',
-      subtitle: 'Kitovu chako cha kifedha kwa shughuli na malipo ya bili bila mshono.',
+      subtitle: 'Kitovu chako cha kidijitali cha kifedha kwa shughuli bila mshono kote Afrika',
       balance: 'Salio la Pochi',
       billsPaid: 'Bili Zilizolipwa',
       totalSpent: 'Jumla Iliyotumika',
@@ -217,6 +226,11 @@ const translations = {
       noTransactions: 'Hakuna shughuli za hivi karibuni',
       startPaying: 'Anza Kulipa',
       pendingBills: 'Bili Zinazongoja',
+      viewAll: 'Ona Zote',
+      payNow: 'Lipa Sasa',
+      getStarted: 'Anza',
+      loadWallet: 'Jaza Pochi',
+      connectBank: 'Unganisha Akaunti ya Benki',
     },
     bills: {
       electricity: 'Bili ya Umeme',
@@ -254,10 +268,6 @@ const translations = {
       delete: 'Futa',
       confirm: 'Thibitisha',
     },
-    nav: {
-      mainMenu: 'Menyu Kuu',
-      logout: 'Ondoka',
-    },
     history: {
       title: 'Historia ya Shughuli',
       subtitle: 'Angalia na udhibiti historia yako ya malipo',
@@ -285,10 +295,12 @@ const translations = {
       history: 'Tarihi',
       wallet: 'Wallet',
       support: 'Taimako',
+      mainMenu: 'Babban Menu',
+      logout: 'Fita',
     },
     dashboard: {
       welcome: 'Barka da zuwa',
-      subtitle: 'Cibiyar ku ta kuɗi don ma'amaloli marasa matsala da biyan kuɗi.',
+      subtitle: 'Cibiyar ku ta dijital don ma\'amaloli marasa matsala a duk faɗin Afirka',
       balance: 'Wallet Balance',
       billsPaid: 'Kuɗaɗen da Aka Biya',
       totalSpent: 'Jimlar Kuɗin da Aka Kashe',
@@ -297,13 +309,18 @@ const translations = {
       dueSoon: 'Nan Ba da Jimawa Ba',
       quickPay: 'Biyan Kuɗi Mai Sauri',
       quickPaySubtitle: 'Biya kuɗin ku da sauri',
-      recentTransactions: 'Ma'amaloli na Kwanan Nan',
-      recentTransactionsSubtitle: 'Ma'amalolin ku na ƙarshe',
+      recentTransactions: 'Ma\'amaloli na Kwanan Nan',
+      recentTransactionsSubtitle: 'Ma\'amalolin ku na ƙarshe',
       addFunds: 'Kara Kudi',
       needsAttention: 'Yana Bukatar Kulawa',
       noTransactions: 'Babu wani ciniki na baya-bayan nan',
       startPaying: 'Fara Biyan Kudade',
       pendingBills: 'Kudaden da Suke Jira',
+      viewAll: 'Duba Duka',
+      payNow: 'Biya Yanzu',
+      getStarted: 'Fara',
+      loadWallet: 'Cika Wallet',
+      connectBank: 'Haɗa Asusun Banki',
     },
     bills: {
       electricity: 'Kuɗin Lantarki',
@@ -341,10 +358,6 @@ const translations = {
       delete: 'Share',
       confirm: 'Tabbatar',
     },
-    nav: {
-      mainMenu: 'Babban Menu',
-      logout: 'Fita',
-    },
     history: {
       title: 'Tarihin Ma\'amala',
       subtitle: 'Duba da sarrafa tarihin biyan ku',
@@ -371,18 +384,26 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   }, [language]);
 
   const t = (key: string, vars: { [key: string]: string | number } = {}) => {
-    let translation = translations[language as keyof typeof translations]?.[key];
+    const keys = key.split('.');
+    let translation: any = translations[language as keyof typeof translations];
 
-    if (!translation) {
-      translation = translations['en'][key];
-      if (!translation) {
-        return key;
-      }
+    for (const k of keys) {
+      translation = translation?.[k];
     }
 
-    Object.entries(vars).forEach(([key, value]) => {
-      translation = translation!.replace(`{${key}}`, String(value));
-    });
+    if (!translation) {
+      let fallback: any = translations['en'];
+      for (const k of keys) {
+        fallback = fallback?.[k];
+      }
+      translation = fallback || key;
+    }
+
+    if (typeof translation === 'string') {
+      Object.entries(vars).forEach(([key, value]) => {
+        translation = translation!.replace(`{${key}}`, String(value));
+      });
+    }
 
     return translation || key;
   };
