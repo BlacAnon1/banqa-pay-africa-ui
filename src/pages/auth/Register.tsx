@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,7 +40,8 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { signUp, loading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const validateStep1 = () => {
@@ -125,15 +125,18 @@ const Register = () => {
     
     if (!validateStep3()) return;
 
+    setIsSubmitting(true);
+    
     try {
-      console.log('Submitting registration form:', {
-        email: formData.email,
-        fullName: formData.fullName,
-        phoneNumber: formData.phoneNumber,
-        countryOfResidence: formData.countryOfResidence
+      console.log('Starting registration process...');
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Registration timeout')), 30000); // 30 second timeout
       });
-
-      const { error } = await signUp({
+      
+      // Race between signup and timeout
+      const signUpPromise = signUp({
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
@@ -145,14 +148,21 @@ const Register = () => {
         marketingConsent: formData.marketingConsent,
       });
 
+      const { error } = await Promise.race([signUpPromise, timeoutPromise]);
+
       if (error) {
         console.error('Registration error:', error);
+        
         let errorMessage = "Please try again or contact support.";
         
-        if (error.message?.includes('already registered')) {
+        if (error.message?.includes('timeout') || error.message?.includes('504')) {
+          errorMessage = "Registration is taking longer than expected. Please try again in a moment.";
+        } else if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
           errorMessage = "This email is already registered. Please try logging in instead.";
         } else if (error.message?.includes('Invalid email')) {
           errorMessage = "Please enter a valid email address.";
+        } else if (error.message?.includes('Password')) {
+          errorMessage = "Password must be at least 6 characters long.";
         }
         
         toast({
@@ -161,19 +171,29 @@ const Register = () => {
           variant: "destructive",
         });
       } else {
+        console.log('Registration successful');
         toast({
           title: "Registration successful!",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email to verify your account before signing in.",
         });
         navigate('/login');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration exception:', error);
+      
+      let errorMessage = "An unexpected error occurred. Please try again.";
+      
+      if (error.message?.includes('timeout')) {
+        errorMessage = "Registration is taking longer than expected. Please try again in a moment.";
+      }
+      
       toast({
         title: "Registration failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -235,7 +255,7 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Enter your full legal name"
                     required
-                    disabled={loading}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -248,7 +268,7 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="Enter your email address"
                     required
-                    disabled={loading}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="space-y-2">
@@ -261,14 +281,14 @@ const Register = () => {
                     onChange={handleChange}
                     placeholder="+234 123 456 7890"
                     required
-                    disabled={loading}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <Button
                   type="button"
                   onClick={nextStep}
                   className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={loading}
+                  disabled={isSubmitting}
                 >
                   Continue
                 </Button>
@@ -281,7 +301,7 @@ const Register = () => {
                   <Label htmlFor="countryOfResidence">Country of Residence *</Label>
                   <Select 
                     onValueChange={(value) => handleSelectChange('countryOfResidence', value)}
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select your country" />
@@ -303,7 +323,7 @@ const Register = () => {
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    disabled={loading}
+                    disabled={isSubmitting}
                   />
                 </div>
                 <div className="flex space-x-2">
@@ -312,7 +332,7 @@ const Register = () => {
                     onClick={prevStep}
                     variant="outline"
                     className="flex-1"
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
                     Back
                   </Button>
@@ -320,7 +340,7 @@ const Register = () => {
                     type="button"
                     onClick={nextStep}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
                     Continue
                   </Button>
@@ -341,7 +361,7 @@ const Register = () => {
                       onChange={handleChange}
                       placeholder="Create a strong password"
                       required
-                      disabled={loading}
+                      disabled={isSubmitting}
                     />
                     <Button
                       type="button"
@@ -349,7 +369,7 @@ const Register = () => {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -370,7 +390,7 @@ const Register = () => {
                       onChange={handleChange}
                       placeholder="Confirm your password"
                       required
-                      disabled={loading}
+                      disabled={isSubmitting}
                     />
                     <Button
                       type="button"
@@ -378,7 +398,7 @@ const Register = () => {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -395,7 +415,7 @@ const Register = () => {
                       id="termsAccepted"
                       checked={formData.termsAccepted}
                       onCheckedChange={(checked) => handleCheckboxChange('termsAccepted', checked as boolean)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     />
                     <Label htmlFor="termsAccepted" className="text-sm">
                       I accept the <Link to="/terms" className="text-emerald-600 hover:underline">Terms of Service</Link> *
@@ -406,7 +426,7 @@ const Register = () => {
                       id="privacyPolicyAccepted"
                       checked={formData.privacyPolicyAccepted}
                       onCheckedChange={(checked) => handleCheckboxChange('privacyPolicyAccepted', checked as boolean)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     />
                     <Label htmlFor="privacyPolicyAccepted" className="text-sm">
                       I accept the <Link to="/privacy" className="text-emerald-600 hover:underline">Privacy Policy</Link> *
@@ -417,7 +437,7 @@ const Register = () => {
                       id="marketingConsent"
                       checked={formData.marketingConsent}
                       onCheckedChange={(checked) => handleCheckboxChange('marketingConsent', checked as boolean)}
-                      disabled={loading}
+                      disabled={isSubmitting}
                     />
                     <Label htmlFor="marketingConsent" className="text-sm">
                       I agree to receive marketing communications
@@ -431,16 +451,16 @@ const Register = () => {
                     onClick={prevStep}
                     variant="outline"
                     className="flex-1"
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
                     Back
                   </Button>
                   <Button
                     type="submit"
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                    disabled={loading}
+                    disabled={isSubmitting}
                   >
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </div>
               </>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -138,16 +137,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (data: SignUpData) => {
     try {
-      setLoading(true);
-      
-      const redirectUrl = `${window.location.origin}/`;
-      
-      console.log('Signing up with data:', {
+      console.log('Starting signup process with data:', {
         email: data.email,
         fullName: data.fullName,
         phoneNumber: data.phoneNumber,
         countryOfResidence: data.countryOfResidence
       });
+      
+      const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
         email: data.email,
@@ -167,17 +164,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('Signup error:', error);
+        console.error('Signup error from Supabase:', error);
       } else {
-        console.log('Signup successful');
+        console.log('Signup request sent successfully');
       }
 
       return { error };
     } catch (error) {
       console.error('Signup exception:', error);
       return { error };
-    } finally {
-      setLoading(false);
     }
   };
 
