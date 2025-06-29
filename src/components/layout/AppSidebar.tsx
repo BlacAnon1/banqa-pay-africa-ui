@@ -33,20 +33,19 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   
   const currentPath = location.pathname;
-  const isActive = (path: string) => currentPath === path;
   const collapsed = state === 'collapsed';
 
   return (
     <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible="offcanvas">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">B</span>
+          <div className="w-10 h-10 banqa-gradient rounded-xl flex items-center justify-center shadow-lg cultural-card">
+            <span className="text-white font-bold text-lg">B</span>
           </div>
           {!collapsed && (
             <div>
-              <h2 className="font-bold text-xl text-emerald-600">Banqa</h2>
-              <p className="text-xs text-muted-foreground">Pay Africa</p>
+              <h2 className="font-bold text-xl text-primary">{t('company.name')}</h2>
+              <p className="text-xs text-muted-foreground font-medium">{t('company.tagline')}</p>
             </div>
           )}
         </div>
@@ -54,7 +53,9 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-primary font-semibold">
+            {!collapsed && 'Main Menu'}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
@@ -63,15 +64,15 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400'
-                            : 'hover:bg-muted'
+                            ? 'bg-primary/10 text-primary border-l-4 border-primary shadow-sm'
+                            : 'hover:bg-muted hover:text-primary'
                         }`
                       }
                     >
                       <item.icon className="h-5 w-5" />
-                      {!collapsed && <span>{t(item.title)}</span>}
+                      {!collapsed && <span className="font-medium">{t(item.title)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -85,10 +86,10 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           onClick={signOut}
-          className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+          className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          {!collapsed && <span>Logout</span>}
+          {!collapsed && <span className="font-medium">Logout</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
