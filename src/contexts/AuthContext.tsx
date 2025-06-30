@@ -1,46 +1,30 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Profile {
-  id: string;
-  full_name: string;
-  email: string;
-  phone?: string;
-  country?: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  profile: Profile | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  signOut: () => Promise<void>;
-}
+import { UserProfile, AuthContextType, SignUpData } from '@/types/auth';
+import { authService } from '@/services/authService';
+import { profileService } from '@/services/profileService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // For now, create a mock profile based on user data
-        setProfile({
-          id: session.user.id,
-          full_name: session.user.user_metadata?.full_name || 'User',
-          email: session.user.email || '',
-          phone: session.user.user_metadata?.phone,
-          country: 'Nigeria'
-        });
+        // Fetch real profile data
+        const profileData = await profileService.fetchProfile(session.user.id);
+        setProfile(profileData);
       }
       
       setLoading(false);
@@ -51,16 +35,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          setProfile({
-            id: session.user.id,
-            full_name: session.user.user_metadata?.full_name || 'User',
-            email: session.user.email || '',
-            phone: session.user.user_metadata?.phone,
-            country: 'Nigeria'
-          });
+          setTimeout(async () => {
+            const profileData = await profileService.fetchProfile(session.user.id);
+            setProfile(profileData);
+          }, 0);
         } else {
           setProfile(null);
         }
@@ -72,33 +54,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  const signUp = async (data: SignUpData) => {
+    setLoading(true);
+    try {
+      const result = await authService.signUp(data);
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const result = await authService.signIn(email, password);
+      return result;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await authService.signOut();
     setUser(null);
+    setSession(null);
     setProfile(null);
+  };
+
+  const updateProfile = async (profileData: Partial<UserProfile>) => {
+    if (!user) return { error: new Error('No user logged in') };
+    
+    const result = await profileService.updateProfile(user.id, profileData);
+    
+    if (!result.error) {
+      // Refresh profile data after update
+      const updatedProfile = await profileService.fetchProfile(user.id);
+      setProfile(updatedProfile);
+    }
+    
+    return result;
+  };
+
+  const refreshProfile = async () => {
+    if (user) {
+      const profileData = await profileService.fetchProfile(user.id);
+      setProfile(profileData);
+    }
   };
 
   // For development, let's bypass authentication temporarily
   const mockUser = {
     id: 'demo-user',
     email: 'demo@banqa.com',
-    user_metadata: { full_name: 'Demo User' }
+    app_metadata: {},
+    user_metadata: { full_name: 'Demo User' },
+    aud: 'authenticated',
+    created_at: new Date().toISOString()
   } as User;
 
-  const mockProfile = {
+  const mockProfile: UserProfile = {
     id: 'demo-user',
-    full_name: 'Demo User',
     email: 'demo@banqa.com',
-    country: 'Nigeria'
+    full_name: 'Demo User',
+    country_of_residence: 'Nigeria',
+    profile_completed: false,
+    terms_accepted: true,
+    privacy_policy_accepted: true
   };
 
   return (
     <AuthContext.Provider value={{
       user: user || mockUser,
+      session: session,
       profile: profile || mockProfile,
       isAuthenticated: true, // Always authenticated for demo
       loading,
-      signOut
+      signUp,
+      signIn,
+      signOut,
+      updateProfile,
+      refreshProfile
     }}>
       {children}
     </AuthContext.Provider>

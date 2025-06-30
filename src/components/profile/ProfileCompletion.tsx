@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -56,7 +55,7 @@ const ProfileCompletion = () => {
     }
   }, [profile]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -76,7 +75,7 @@ const ProfileCompletion = () => {
     try {
       const updateData = {
         ...formData,
-        monthly_income: formData.monthly_income ? parseFloat(formData.monthly_income) : null,
+        monthly_income: formData.monthly_income ? parseFloat(formData.monthly_income) : undefined,
         profile_completed: completionPercentage >= 80
       };
 
