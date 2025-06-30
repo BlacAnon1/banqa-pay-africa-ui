@@ -1,13 +1,14 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWallet } from '@/contexts/WalletContext';
 
 const Dashboard = () => {
   const { t } = useLanguage();
   const { profile } = useAuth();
+  const { wallet, loading } = useWallet();
 
   const quickPayServices = [
     { name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500' },
@@ -51,7 +52,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {formatCurrency(0)}
+              {loading ? '₦...' : formatCurrency(wallet?.balance || 0)}
             </div>
             <Button variant="outline" size="sm" className="mt-2 gap-2">
               <Plus className="h-4 w-4" />

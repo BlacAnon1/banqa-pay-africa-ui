@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Minus, Eye, EyeOff, CreditCard, Banknote } from 'lucide-react';
 import { useState } from 'react';
+import { AddFundsModal } from '@/components/wallet/AddFundsModal';
+import { useWallet } from '@/hooks/useWallet';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [addFundsAmount, setAddFundsAmount] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  
+  const { wallet, loading } = useWallet();
 
   const walletTransactions = [
     { id: 1, type: 'credit', description: 'Wallet Top-up', amount: '+₦50,000', date: '2024-12-25', method: 'Bank Transfer' },
@@ -47,10 +51,19 @@ const Wallet = () => {
         </CardHeader>
         <CardContent>
           <div className="text-4xl font-bold mb-4">
-            {showBalance ? '₦85,420.50' : '₦*****.**'}
+            {loading ? (
+              '₦*****.**'
+            ) : showBalance ? (
+              `₦${wallet?.balance?.toLocaleString() || '0.00'}`
+            ) : (
+              '₦*****.**'
+            )}
           </div>
           <div className="flex gap-3">
-            <Button className="bg-white text-emerald-600 hover:bg-emerald-50 gap-2">
+            <Button 
+              className="bg-white text-emerald-600 hover:bg-emerald-50 gap-2"
+              onClick={() => setShowAddFundsModal(true)}
+            >
               <Plus className="h-4 w-4" />
               Add Funds
             </Button>
@@ -116,34 +129,18 @@ const Wallet = () => {
               <CardDescription>Top up your wallet using various payment methods</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="add-amount">Amount (₦)</Label>
-                <Input
-                  id="add-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={addFundsAmount}
-                  onChange={(e) => setAddFundsAmount(e.target.value)}
-                />
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  Use our secure payment gateway to add funds to your wallet
+                </p>
+                <Button 
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                  onClick={() => setShowAddFundsModal(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Funds Now
+                </Button>
               </div>
-
-              <div className="space-y-3">
-                <Label>Payment Method</Label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Button variant="outline" className="h-16 flex flex-col gap-2">
-                    <CreditCard className="h-6 w-6" />
-                    <span>Bank Transfer</span>
-                  </Button>
-                  <Button variant="outline" className="h-16 flex flex-col gap-2">
-                    <Banknote className="h-6 w-6" />
-                    <span>Debit Card</span>
-                  </Button>
-                </div>
-              </div>
-
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Continue to Payment
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -192,6 +189,11 @@ const Wallet = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AddFundsModal 
+        open={showAddFundsModal}
+        onOpenChange={setShowAddFundsModal}
+      />
     </div>
   );
 };
