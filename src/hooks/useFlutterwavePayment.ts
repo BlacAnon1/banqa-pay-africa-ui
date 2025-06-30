@@ -55,24 +55,40 @@ export const useFlutterwavePayment = () => {
       return new Promise((resolve, reject) => {
         console.log('Opening Flutterwave checkout with data:', paymentData);
         
+        let paymentProcessed = false; // Prevent duplicate processing
+        
         window.FlutterwaveCheckout({
           ...paymentData,
           callback: async (response: any) => {
-            console.log('Flutterwave response:', response);
+            console.log('Flutterwave callback received:', response);
             
-            if (response.status === 'successful') {
+            // Prevent duplicate processing
+            if (paymentProcessed) {
+              console.log('Payment already processed, ignoring duplicate callback');
+              return;
+            }
+            paymentProcessed = true;
+            
+            if (response.status === 'successful' || response.status === 'completed') {
               try {
+                console.log('Processing successful payment...');
+                
                 // Sync wallet with the payment amount
                 const syncResult = await syncWallet(
                   amount, 
                   'credit', 
-                  response.transaction_id,
+                  response.transaction_id?.toString() || response.flw_ref,
                   {
                     payment_method: 'flutterwave',
                     flw_ref: response.flw_ref,
-                    tx_ref: response.tx_ref
+                    tx_ref: response.tx_ref,
+                    transaction_id: response.transaction_id,
+                    amount: response.amount,
+                    currency: response.currency
                   }
                 );
+
+                console.log('Wallet sync result:', syncResult);
 
                 if (syncResult.error) {
                   throw new Error(syncResult.error);
@@ -81,11 +97,14 @@ export const useFlutterwavePayment = () => {
                 toast({
                   title: "Payment Successful!",
                   description: `₦${amount.toLocaleString()} has been added to your wallet`,
+                  duration: 5000,
                 });
 
-                // Force redirect to dashboard after successful payment
-                console.log('Redirecting to dashboard...');
-                window.location.href = '/dashboard';
+                // Small delay to ensure wallet sync completes
+                setTimeout(() => {
+                  console.log('Redirecting to dashboard after successful payment...');
+                  window.location.href = '/dashboard';
+                }, 2000);
 
                 resolve(response);
               } catch (error) {
@@ -98,6 +117,7 @@ export const useFlutterwavePayment = () => {
                 reject(error);
               }
             } else {
+              console.log('Payment failed or cancelled:', response.status);
               toast({
                 title: "Payment Failed",
                 description: "Your payment could not be processed. Please try again.",
@@ -108,7 +128,10 @@ export const useFlutterwavePayment = () => {
           },
           onclose: () => {
             console.log('Payment modal closed');
-            resolve(null);
+            if (!paymentProcessed) {
+              console.log('Payment was not completed');
+              resolve(null);
+            }
           },
         });
       });
