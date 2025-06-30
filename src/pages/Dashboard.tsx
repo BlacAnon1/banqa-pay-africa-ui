@@ -1,56 +1,13 @@
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CreditCard, Zap, Droplets, Wifi, Banknote, Calendar, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
+import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const Dashboard = () => {
   const { t } = useLanguage();
-  const { profile, user } = useAuth();
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user) return;
-
-      try {
-        // Fetch wallet balance
-        const { data: walletData } = await supabase
-          .from('wallets')
-          .select('balance')
-          .eq('user_id', user.id)
-          .single();
-
-        if (walletData) {
-          setWalletBalance(walletData.balance);
-        }
-
-        // Fetch recent transactions
-        const { data: transactionsData } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (transactionsData) {
-          setRecentTransactions(transactionsData);
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [user]);
+  const { profile } = useAuth();
 
   const quickPayServices = [
     { name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500' },
@@ -70,22 +27,6 @@ const Dashboard = () => {
       minimumFractionDigits: 0,
     }).format(amount);
   };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8 african-pattern-bg min-h-full">
@@ -110,7 +51,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {formatCurrency(walletBalance)}
+              {formatCurrency(0)}
             </div>
             <Button variant="outline" size="sm" className="mt-2 gap-2">
               <Plus className="h-4 w-4" />
@@ -125,9 +66,7 @@ const Dashboard = () => {
             <TrendingUp className="h-5 w-5 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-secondary">
-              {recentTransactions.filter(t => t.status === 'completed').length}
-            </div>
+            <div className="text-3xl font-bold text-secondary">0</div>
             <p className="text-sm text-muted-foreground">{t('dashboard.thisMonth')}</p>
           </CardContent>
         </Card>
@@ -138,13 +77,7 @@ const Dashboard = () => {
             <CreditCard className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-accent">
-              {formatCurrency(
-                recentTransactions
-                  .filter(t => t.status === 'completed')
-                  .reduce((sum, t) => sum + Number(t.amount), 0)
-              )}
-            </div>
+            <div className="text-3xl font-bold text-accent">{formatCurrency(0)}</div>
             <p className="text-sm text-muted-foreground">{t('dashboard.thisMonth')}</p>
           </CardContent>
         </Card>
@@ -152,13 +85,11 @@ const Dashboard = () => {
         <Card className="cultural-card border-primary/20 hover:border-primary/40 transition-all duration-300 hover:shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground">{t('dashboard.pendingBills')}</CardTitle>
-            <Calendar className="h-5 w-5 text-primary" />
+            <Banknote className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">
-              {recentTransactions.filter(t => t.status === 'pending').length}
-            </div>
-            <p className="text-sm text-orange-600 font-medium">{t('dashboard.needsAttention')}</p>
+            <div className="text-3xl font-bold text-primary">0</div>
+            <p className="text-sm text-orange-600 font-medium">{t('dashboard.getStarted')}</p>
           </CardContent>
         </Card>
       </div>
@@ -188,41 +119,26 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Transactions */}
+        {/* Getting Started */}
         <Card className="lg:col-span-1 cultural-card border-accent/20">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-accent">{t('dashboard.recentTransactions')}</CardTitle>
-            <CardDescription>{t('dashboard.recentTransactionsSubtitle')}</CardDescription>
+            <CardTitle className="text-xl font-bold text-accent">{t('dashboard.getStarted')}</CardTitle>
+            <CardDescription>Start your financial journey with Banqa</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentTransactions.length > 0 ? (
-                recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 border border-primary/10 rounded-xl hover:bg-primary/5 transition-colors">
-                    <div>
-                      <p className="font-semibold text-foreground">{transaction.description || transaction.service_type}</p>
-                      <p className="text-sm text-muted-foreground">{formatDate(transaction.created_at)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{formatCurrency(Number(transaction.amount))}</p>
-                      <Badge 
-                        variant={transaction.status === 'completed' ? 'default' : 
-                                transaction.status === 'failed' ? 'destructive' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {t(`status.${transaction.status}`)}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('dashboard.noTransactions')}</p>
-                  <Button variant="outline" className="mt-4">
-                    {t('dashboard.startPaying')}
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">Ready to start managing your bills?</p>
+                <div className="space-y-3">
+                  <Button className="w-full gap-2">
+                    <Plus className="h-4 w-4" />
+                    {t('dashboard.loadWallet')}
+                  </Button>
+                  <Button variant="outline" className="w-full">
+                    {t('dashboard.connectBank')}
                   </Button>
                 </div>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>
