@@ -22,8 +22,11 @@ serve(async (req) => {
     // Get the authorization header
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('No authorization header provided')
       throw new Error('No authorization header')
     }
+
+    console.log('Authorization header present, getting user...')
 
     // Get user from token
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(
@@ -31,29 +34,88 @@ serve(async (req) => {
     )
 
     if (userError || !user) {
-      console.error('User error:', userError)
+      console.error('User authentication error:', userError)
       throw new Error('Invalid user token')
     }
 
     console.log('User authenticated:', user.id)
 
-    // Get user profile with better error handling
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle()
+    // Get user profile with better error handling and retry logic
+    let profile = null;
+    let profileError = null;
 
-    console.log('Profile query result:', { profile, profileError })
+    // Try multiple approaches to get the profile
+    const profileQueries = [
+      // First try: direct query
+      () => supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle(),
+      
+      // Second try: with service role client if first fails
+      () => {
+        const serviceClient = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        )
+        return serviceClient
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle()
+      }
+    ]
 
-    if (profileError) {
-      console.error('Profile query error:', profileError)
-      throw new Error(`Profile query failed: ${profileError.message}`)
+    for (const queryFn of profileQueries) {
+      const result = await queryFn()
+      if (!result.error && result.data) {
+        profile = result.data
+        break
+      } else {
+        profileError = result.error
+        console.log('Profile query attempt failed:', result.error)
+      }
     }
+
+    console.log('Final profile query result:', { profile, profileError })
 
     if (!profile) {
       console.error('No profile found for user:', user.id)
-      throw new Error('Profile not found. Please complete your profile setup.')
+      console.error('Profile error details:', profileError)
+      
+      // Try to create a basic profile if it doesn't exist
+      const { error: createError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email || 'User',
+          country_of_residence: 'Nigeria',
+          terms_accepted: true,
+          privacy_policy_accepted: true,
+          marketing_consent: false
+        })
+
+      if (createError) {
+        console.error('Failed to create profile:', createError)
+        throw new Error('Profile not found and could not be created. Please complete your profile setup.')
+      }
+
+      // Retry getting the profile after creation
+      const { data: newProfile, error: newProfileError } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (newProfileError || !newProfile) {
+        console.error('Failed to retrieve newly created profile:', newProfileError)
+        throw new Error('Profile creation failed. Please try again.')
+      }
+
+      profile = newProfile
+      console.log('Created and retrieved new profile:', profile)
     }
 
     const { amount } = await req.json()

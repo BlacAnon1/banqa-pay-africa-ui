@@ -23,6 +23,9 @@ export const useFlutterwavePayment = () => {
     setLoading(true);
 
     try {
+      console.log('Initializing payment for user:', user.id, 'amount:', amount);
+      console.log('User profile:', profile);
+
       // Get payment data from secure edge function
       const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke(
         'initialize-payment',
@@ -31,18 +34,30 @@ export const useFlutterwavePayment = () => {
         }
       );
 
-      if (paymentError || !paymentResponse.success) {
+      console.log('Payment response:', paymentResponse, 'Error:', paymentError);
+
+      if (paymentError) {
+        console.error('Supabase function error:', paymentError);
+        throw new Error(`Function error: ${paymentError.message}`);
+      }
+
+      if (!paymentResponse || !paymentResponse.success) {
+        console.error('Payment response error:', paymentResponse);
         throw new Error(paymentResponse?.error || 'Failed to initialize payment');
       }
 
       const { paymentData, reference } = paymentResponse;
+      console.log('Payment data received:', { reference, amount, paymentData });
 
       // Load Flutterwave script dynamically
       if (!window.FlutterwaveCheckout) {
+        console.log('Loading Flutterwave script...');
         await loadFlutterwaveScript();
       }
 
       return new Promise((resolve, reject) => {
+        console.log('Opening Flutterwave checkout with data:', paymentData);
+        
         window.FlutterwaveCheckout({
           ...paymentData,
           callback: async (response: any) => {
@@ -101,7 +116,7 @@ export const useFlutterwavePayment = () => {
       console.error('Payment initialization error:', error);
       toast({
         title: "Payment Error",
-        description: "Could not initialize payment. Please try again.",
+        description: error instanceof Error ? error.message : "Could not initialize payment. Please try again.",
         variant: "destructive",
       });
       return null;
@@ -120,8 +135,14 @@ export const useFlutterwavePayment = () => {
       const script = document.createElement('script');
       script.src = 'https://checkout.flutterwave.com/v3.js';
       script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Flutterwave script'));
+      script.onload = () => {
+        console.log('Flutterwave script loaded successfully');
+        resolve();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Flutterwave script');
+        reject(new Error('Failed to load Flutterwave script'));
+      };
       document.head.appendChild(script);
     });
   };
