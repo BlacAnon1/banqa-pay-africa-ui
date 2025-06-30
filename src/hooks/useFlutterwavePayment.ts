@@ -3,22 +3,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWallet } from '@/hooks/useWallet';
 import { toast } from '@/hooks/use-toast';
-
-interface FlutterwavePaymentData {
-  amount: number;
-  currency: string;
-  reference: string;
-  customer: {
-    email: string;
-    name: string;
-    phone_number?: string;
-  };
-  customizations: {
-    title: string;
-    description: string;
-    logo: string;
-  };
-}
+import { supabase } from '@/integrations/supabase/client';
 
 export const useFlutterwavePayment = () => {
   const [loading, setLoading] = useState(false);
@@ -38,23 +23,19 @@ export const useFlutterwavePayment = () => {
     setLoading(true);
 
     try {
-      const reference = `BQ_${Date.now()}_${user.id.substr(0, 8)}`;
-      
-      const paymentData: FlutterwavePaymentData = {
-        amount: amount,
-        currency: 'NGN',
-        reference: reference,
-        customer: {
-          email: profile.email,
-          name: profile.full_name || 'Banqa User',
-          phone_number: profile.phone_number || undefined,
-        },
-        customizations: {
-          title: 'Banqa Wallet Top-up',
-          description: `Add ₦${amount.toLocaleString()} to your Banqa wallet`,
-          logo: window.location.origin + '/favicon.ico',
-        },
-      };
+      // Get payment data from secure edge function
+      const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke(
+        'initialize-payment',
+        {
+          body: { amount },
+        }
+      );
+
+      if (paymentError || !paymentResponse.success) {
+        throw new Error(paymentResponse?.error || 'Failed to initialize payment');
+      }
+
+      const { paymentData, reference } = paymentResponse;
 
       // Load Flutterwave script dynamically
       if (!window.FlutterwaveCheckout) {
@@ -63,13 +44,7 @@ export const useFlutterwavePayment = () => {
 
       return new Promise((resolve, reject) => {
         window.FlutterwaveCheckout({
-          public_key: "FLWPUBK_TEST-SANDBOXDEMOKEY-X", // This will be replaced with actual key
-          tx_ref: reference,
-          amount: amount,
-          currency: 'NGN',
-          payment_options: 'card, banktransfer, ussd',
-          customer: paymentData.customer,
-          customizations: paymentData.customizations,
+          ...paymentData,
           callback: async (response: any) => {
             console.log('Flutterwave response:', response);
             
