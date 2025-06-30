@@ -18,7 +18,7 @@ export function Footer() {
             Contact Us
           </a>
         </div>
-        <p>&copy; 2024 Banqa. All rights reserved.</p>
+        <p>&copy; 2025 Banqa. All rights reserved.</p>
       </div>
     </footer>
   );

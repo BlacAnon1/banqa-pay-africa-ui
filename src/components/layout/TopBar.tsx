@@ -28,6 +28,7 @@ const languages = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'sw', name: 'Kiswahili', flag: '🇹🇿' },
   { code: 'ha', name: 'Hausa', flag: '🇳🇬' },
+  { code: 'yo', name: 'Yorùbá', flag: '🇳🇬' },
 ];
 
 export function TopBar() {
