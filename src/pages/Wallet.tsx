@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Minus, Eye, EyeOff, CreditCard, Banknote } from 'lucide-react';
 import { useState } from 'react';
 import { AddFundsModal } from '@/components/wallet/AddFundsModal';
-import { useWallet } from '@/hooks/useWallet';
+import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
@@ -15,7 +15,7 @@ const Wallet = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   
-  const { wallet, loading } = useWallet();
+  const { wallet, loading } = useRealTimeWallet();
 
   const walletTransactions = [
     { id: 1, type: 'credit', description: 'Wallet Top-up', amount: '+₦50,000', date: '2024-12-25', method: 'Bank Transfer' },
@@ -36,7 +36,12 @@ const Wallet = () => {
         <CardHeader>
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-white">Wallet Balance</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                Wallet Balance
+                {!loading && (
+                  <span className="w-2 h-2 bg-white rounded-full animate-pulse" title="Live balance"></span>
+                )}
+              </CardTitle>
               <CardDescription className="text-emerald-100">Available funds</CardDescription>
             </div>
             <Button

@@ -1,10 +1,9 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWallet } from '@/hooks/useWallet';
+import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 import { AddFundsModal } from '@/components/wallet/AddFundsModal';
 import { AfricanLogo } from '@/components/ui/AfricanLogo';
 import { useState } from 'react';
@@ -12,7 +11,7 @@ import { useState } from 'react';
 const Dashboard = () => {
   const { t } = useLanguage();
   const { profile } = useAuth();
-  const { wallet, loading } = useWallet();
+  const { wallet, loading } = useRealTimeWallet();
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
   const quickPayServices = [
@@ -59,8 +58,11 @@ const Dashboard = () => {
             <Banknote className="h-5 w-5 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">
+            <div className="text-3xl font-bold text-primary flex items-center gap-2">
               {loading ? '₦...' : formatCurrency(wallet?.balance || 0)}
+              {!loading && (
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Live balance"></span>
+              )}
             </div>
             <Button 
               variant="outline" 

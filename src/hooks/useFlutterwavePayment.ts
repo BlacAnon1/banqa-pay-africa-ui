@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWallet } from '@/hooks/useWallet';
+import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useFlutterwavePayment = () => {
   const [loading, setLoading] = useState(false);
   const { user, profile } = useAuth();
-  const { syncWallet } = useWallet();
+  const { syncWallet } = useRealTimeWallet();
 
   const initializePayment = async (amount: number) => {
     if (!user || !profile) {
@@ -24,7 +24,6 @@ export const useFlutterwavePayment = () => {
 
     try {
       console.log('Initializing payment for user:', user.id, 'amount:', amount);
-      console.log('User profile:', profile);
 
       // Get payment data from secure edge function
       const { data: paymentResponse, error: paymentError } = await supabase.functions.invoke(
@@ -33,8 +32,6 @@ export const useFlutterwavePayment = () => {
           body: { amount },
         }
       );
-
-      console.log('Payment response:', paymentResponse, 'Error:', paymentError);
 
       if (paymentError) {
         console.error('Supabase function error:', paymentError);
@@ -47,7 +44,7 @@ export const useFlutterwavePayment = () => {
       }
 
       const { paymentData, reference } = paymentResponse;
-      console.log('Payment data received:', { reference, amount, paymentData });
+      console.log('Payment data received:', { reference, amount });
 
       // Load Flutterwave script dynamically
       if (!window.FlutterwaveCheckout) {
@@ -86,12 +83,9 @@ export const useFlutterwavePayment = () => {
                   description: `₦${amount.toLocaleString()} has been added to your wallet`,
                 });
 
-                // Redirect to dashboard after successful payment
-                setTimeout(() => {
-                  if (window.location.pathname !== '/app/dashboard') {
-                    window.location.href = '/app/dashboard';
-                  }
-                }, 1000);
+                // Force redirect to dashboard after successful payment
+                console.log('Redirecting to dashboard...');
+                window.location.href = '/dashboard';
 
                 resolve(response);
               } catch (error) {
