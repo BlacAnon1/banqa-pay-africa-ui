@@ -1,13 +1,16 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Minus, Eye, EyeOff, CreditCard, Banknote } from 'lucide-react';
+import { Plus, Minus, Eye, EyeOff, CreditCard, Banknote, Calendar, Building2 } from 'lucide-react';
 import { useState } from 'react';
 import { AddFundsModal } from '@/components/wallet/AddFundsModal';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
+import { useRealTimeTransactions } from '@/hooks/useRealTimeTransactions';
+import { format } from 'date-fns';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
@@ -16,13 +19,55 @@ const Wallet = () => {
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   
   const { wallet, loading } = useRealTimeWallet();
+  const { transactions, loading: transactionsLoading } = useRealTimeTransactions();
 
-  const walletTransactions = [
-    { id: 1, type: 'credit', description: 'Wallet Top-up', amount: '+₦50,000', date: '2024-12-25', method: 'Bank Transfer' },
-    { id: 2, type: 'debit', description: 'Electricity Bill', amount: '-₦15,500', date: '2024-12-24', method: 'Wallet' },
-    { id: 3, type: 'credit', description: 'Cashback Reward', amount: '+₦750', date: '2024-12-23', method: 'System' },
-    { id: 4, type: 'debit', description: 'DSTV Subscription', amount: '-₦8,500', date: '2024-12-22', method: 'Wallet' },
-  ];
+  const getTransactionIcon = (type: string) => {
+    if (type === 'credit' || type === 'wallet_topup') {
+      return <Plus className="h-5 w-5" />;
+    }
+    return <Minus className="h-5 w-5" />;
+  };
+
+  const getTransactionColor = (type: string) => {
+    if (type === 'credit' || type === 'wallet_topup') {
+      return 'bg-green-100 text-green-600';
+    }
+    return 'bg-red-100 text-red-600';
+  };
+
+  const getTransactionAmountColor = (type: string) => {
+    if (type === 'credit' || type === 'wallet_topup') {
+      return 'text-green-600';
+    }
+    return 'text-red-600';
+  };
+
+  const formatTransactionAmount = (amount: number, type: string) => {
+    const formattedAmount = `₦${Number(amount).toLocaleString()}`;
+    if (type === 'credit' || type === 'wallet_topup') {
+      return `+${formattedAmount}`;
+    }
+    return `-${formattedAmount}`;
+  };
+
+  const getServiceTypeDisplay = (serviceType: string) => {
+    switch (serviceType) {
+      case 'wallet_topup':
+        return 'Wallet Top-up';
+      case 'wallet_debit':
+        return 'Wallet Debit';
+      case 'electricity':
+        return 'Electricity Bill';
+      case 'airtime':
+        return 'Airtime Purchase';
+      case 'data':
+        return 'Data Bundle';
+      case 'cable_tv':
+        return 'Cable TV Subscription';
+      default:
+        return serviceType || 'Transaction';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -94,35 +139,68 @@ const Wallet = () => {
               <CardDescription>Your wallet transaction history</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {walletTransactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        transaction.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                      }`}>
-                        {transaction.type === 'credit' ? <Plus className="h-5 w-5" /> : <Minus className="h-5 w-5" />}
-                      </div>
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.date} • {transaction.method}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {transaction.amount}
-                      </p>
-                      <Badge variant="outline" className="text-xs">
-                        {transaction.type}
-                      </Badge>
-                    </div>
+              {transactionsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <CreditCard className="h-8 w-8 text-gray-400" />
                   </div>
-                ))}
-              </div>
+                  <p className="text-muted-foreground mb-2">No transactions yet</p>
+                  <p className="text-sm text-muted-foreground">Your transaction history will appear here</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.slice(0, 10).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          getTransactionColor(transaction.transaction_type)
+                        }`}>
+                          {getTransactionIcon(transaction.transaction_type)}
+                        </div>
+                        <div>
+                          <p className="font-medium">
+                            {transaction.description || getServiceTypeDisplay(transaction.service_type || transaction.transaction_type)}
+                          </p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>{format(new Date(transaction.created_at), 'MMM dd, yyyy • HH:mm')}</span>
+                            {transaction.provider_name && (
+                              <>
+                                <span>•</span>
+                                <Building2 className="h-3 w-3" />
+                                <span>{transaction.provider_name}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold ${
+                          getTransactionAmountColor(transaction.transaction_type)
+                        }`}>
+                          {formatTransactionAmount(Number(transaction.amount), transaction.transaction_type)}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={transaction.status === 'completed' ? 'default' : 
+                                   transaction.status === 'failed' ? 'destructive' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {transaction.status}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {transaction.transaction_type}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -167,7 +245,7 @@ const Wallet = () => {
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Available balance: ₦85,420.50
+                  Available balance: ₦{wallet?.balance?.toLocaleString() || '0.00'}
                 </p>
               </div>
 
