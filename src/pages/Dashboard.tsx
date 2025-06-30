@@ -3,12 +3,15 @@ import { Button } from '@/components/ui/button';
 import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useWallet } from '@/contexts/WalletContext';
+import { useWallet } from '@/hooks/useWallet';
+import { AddFundsModal } from '@/components/wallet/AddFundsModal';
+import { useState } from 'react';
 
 const Dashboard = () => {
   const { t } = useLanguage();
   const { profile } = useAuth();
   const { wallet, loading } = useWallet();
+  const [showAddFundsModal, setShowAddFundsModal] = useState(false);
 
   const quickPayServices = [
     { name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500' },
@@ -54,7 +57,12 @@ const Dashboard = () => {
             <div className="text-3xl font-bold text-primary">
               {loading ? '₦...' : formatCurrency(wallet?.balance || 0)}
             </div>
-            <Button variant="outline" size="sm" className="mt-2 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 gap-2"
+              onClick={() => setShowAddFundsModal(true)}
+            >
               <Plus className="h-4 w-4" />
               {t('dashboard.addFunds')}
             </Button>
@@ -131,7 +139,10 @@ const Dashboard = () => {
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">Ready to start managing your bills?</p>
                 <div className="space-y-3">
-                  <Button className="w-full gap-2">
+                  <Button 
+                    className="w-full gap-2"
+                    onClick={() => setShowAddFundsModal(true)}
+                  >
                     <Plus className="h-4 w-4" />
                     {t('dashboard.loadWallet')}
                   </Button>
@@ -144,6 +155,11 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AddFundsModal 
+        open={showAddFundsModal}
+        onOpenChange={setShowAddFundsModal}
+      />
     </div>
   );
 };
