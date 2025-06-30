@@ -31,24 +31,35 @@ serve(async (req) => {
     )
 
     if (userError || !user) {
+      console.error('User error:', userError)
       throw new Error('Invalid user token')
     }
 
-    // Get user profile
+    console.log('User authenticated:', user.id)
+
+    // Get user profile with better error handling
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
-    if (profileError || !profile) {
-      throw new Error('Profile not found')
+    console.log('Profile query result:', { profile, profileError })
+
+    if (profileError) {
+      console.error('Profile query error:', profileError)
+      throw new Error(`Profile query failed: ${profileError.message}`)
+    }
+
+    if (!profile) {
+      console.error('No profile found for user:', user.id)
+      throw new Error('Profile not found. Please complete your profile setup.')
     }
 
     const { amount } = await req.json()
 
     if (!amount || amount < 100) {
-      throw new Error('Invalid amount')
+      throw new Error('Invalid amount. Minimum amount is ₦100')
     }
 
     const reference = `BQ_${Date.now()}_${user.id.substr(0, 8)}`
@@ -71,7 +82,13 @@ serve(async (req) => {
       },
     }
 
-    console.log('Payment data prepared:', { reference, amount, user_id: user.id })
+    console.log('Payment data prepared:', { 
+      reference, 
+      amount, 
+      user_id: user.id,
+      customer_email: profile.email,
+      public_key_exists: !!Deno.env.get('FLUTTERWAVE_PUBLIC_KEY')
+    })
 
     return new Response(
       JSON.stringify({ 
