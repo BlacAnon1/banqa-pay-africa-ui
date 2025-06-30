@@ -14,42 +14,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // For development, let's bypass authentication temporarily
+  const mockUser: User = {
+    id: 'demo-user',
+    email: 'demo@banqa.com',
+    app_metadata: {},
+    user_metadata: { full_name: 'Demo User' },
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+    phone: '',
+    confirmation_sent_at: '',
+    confirmed_at: new Date().toISOString(),
+    email_confirmed_at: new Date().toISOString(),
+    invited_at: '',
+    last_sign_in_at: new Date().toISOString(),
+    role: 'authenticated',
+    updated_at: new Date().toISOString()
+  };
+
+  const mockProfile: UserProfile = {
+    id: 'demo-user',
+    email: 'demo@banqa.com',
+    full_name: 'Demo User',
+    country_of_residence: 'Nigeria',
+    profile_completed: false,
+    terms_accepted: true,
+    privacy_policy_accepted: true
+  };
+
   useEffect(() => {
-    // Get initial session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Fetch real profile data
-        const profileData = await profileService.fetchProfile(session.user.id);
-        setProfile(profileData);
-      }
-      
-      setLoading(false);
-    };
+    // Set mock data immediately for development
+    setUser(mockUser);
+    setProfile(mockProfile);
+    setLoading(false);
 
-    getSession();
-
-    // Listen for auth changes
+    // Still set up real auth listener for when auth is properly implemented
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
-        setUser(session?.user ?? null);
         
         if (session?.user) {
+          setUser(session.user);
           setTimeout(async () => {
             const profileData = await profileService.fetchProfile(session.user.id);
             setProfile(profileData);
           }, 0);
         } else {
-          setProfile(null);
+          // Fall back to mock data if no real session
+          setUser(mockUser);
+          setProfile(mockProfile);
         }
         
         setLoading(false);
       }
     );
+
+    // Check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.id);
+      setSession(session);
+      
+      if (session?.user) {
+        setUser(session.user);
+        const profileData = await profileService.fetchProfile(session.user.id);
+        setProfile(profileData);
+      }
+      
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -76,9 +109,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     await authService.signOut();
-    setUser(null);
+    // Reset to mock data
+    setUser(mockUser);
     setSession(null);
-    setProfile(null);
+    setProfile(mockProfile);
   };
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
@@ -102,31 +136,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // For development, let's bypass authentication temporarily
-  const mockUser = {
-    id: 'demo-user',
-    email: 'demo@banqa.com',
-    app_metadata: {},
-    user_metadata: { full_name: 'Demo User' },
-    aud: 'authenticated',
-    created_at: new Date().toISOString()
-  } as User;
-
-  const mockProfile: UserProfile = {
-    id: 'demo-user',
-    email: 'demo@banqa.com',
-    full_name: 'Demo User',
-    country_of_residence: 'Nigeria',
-    profile_completed: false,
-    terms_accepted: true,
-    privacy_policy_accepted: true
-  };
-
   return (
     <AuthContext.Provider value={{
-      user: user || mockUser,
-      session: session,
-      profile: profile || mockProfile,
+      user,
+      session,
+      profile,
       isAuthenticated: true, // Always authenticated for demo
       loading,
       signUp,

@@ -15,6 +15,7 @@ import VerifyOTP from "./pages/auth/VerifyOTP";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Main App Pages
+import Index from "./pages/Index";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import PayBills from "./pages/PayBills";
@@ -39,6 +40,9 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
+                {/* Root route */}
+                <Route path="/" element={<Index />} />
+                
                 {/* Auth Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -46,8 +50,7 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 
                 {/* Main App Routes */}
-                <Route path="/" element={<AppLayout />}>
-                  <Route index element={<Navigate to="/dashboard" replace />} />
+                <Route path="/app" element={<AppLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="pay-bills" element={<PayBills />} />
                   <Route path="history" element={<History />} />
@@ -55,6 +58,11 @@ const App = () => (
                   <Route path="support" element={<Support />} />
                   <Route path="profile/complete" element={<ProfileCompletion />} />
                   <Route path="kyc/documents" element={<DocumentUpload />} />
+                </Route>
+                
+                {/* Direct dashboard route for development */}
+                <Route path="/dashboard" element={<AppLayout />}>
+                  <Route index element={<Dashboard />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />

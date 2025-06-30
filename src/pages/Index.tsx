@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 const Index = () => {
   const { isAuthenticated, loading } = useAuth();
   
+  console.log('Index page - loading:', loading, 'isAuthenticated:', isAuthenticated);
+  
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-emerald-100">
@@ -18,11 +20,8 @@ const Index = () => {
     );
   }
   
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <Navigate to="/login" replace />;
+  // For development, always redirect to dashboard since we're using mock auth
+  return <Navigate to="/dashboard" replace />;
 };
 
 export default Index;
