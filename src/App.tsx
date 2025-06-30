@@ -49,21 +49,37 @@ const App = () => (
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 
-                {/* Main App Routes */}
-                <Route path="/app" element={<AppLayout />}>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="pay-bills" element={<PayBills />} />
-                  <Route path="history" element={<History />} />
-                  <Route path="wallet" element={<Wallet />} />
-                  <Route path="support" element={<Support />} />
-                  <Route path="profile/complete" element={<ProfileCompletion />} />
-                  <Route path="kyc/documents" element={<DocumentUpload />} />
-                </Route>
-                
-                {/* Direct dashboard route for development */}
+                {/* Main App Routes - Direct access with AppLayout wrapper */}
                 <Route path="/dashboard" element={<AppLayout />}>
                   <Route index element={<Dashboard />} />
                 </Route>
+                <Route path="/pay-bills" element={<AppLayout />}>
+                  <Route index element={<PayBills />} />
+                </Route>
+                <Route path="/history" element={<AppLayout />}>
+                  <Route index element={<History />} />
+                </Route>
+                <Route path="/wallet" element={<AppLayout />}>
+                  <Route index element={<Wallet />} />
+                </Route>
+                <Route path="/support" element={<AppLayout />}>
+                  <Route index element={<Support />} />
+                </Route>
+                <Route path="/profile/complete" element={<AppLayout />}>
+                  <Route index element={<ProfileCompletion />} />
+                </Route>
+                <Route path="/kyc/documents" element={<AppLayout />}>
+                  <Route index element={<DocumentUpload />} />
+                </Route>
+                
+                {/* Legacy /app routes for backward compatibility */}
+                <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/app/pay-bills" element={<Navigate to="/pay-bills" replace />} />
+                <Route path="/app/history" element={<Navigate to="/history" replace />} />
+                <Route path="/app/wallet" element={<Navigate to="/wallet" replace />} />
+                <Route path="/app/support" element={<Navigate to="/support" replace />} />
+                <Route path="/app/profile/complete" element={<Navigate to="/profile/complete" replace />} />
+                <Route path="/app/kyc/documents" element={<Navigate to="/kyc/documents" replace />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>
