@@ -86,6 +86,13 @@ export const useFlutterwavePayment = () => {
                   description: `₦${amount.toLocaleString()} has been added to your wallet`,
                 });
 
+                // Redirect to dashboard after successful payment
+                setTimeout(() => {
+                  if (window.location.pathname !== '/app/dashboard') {
+                    window.location.href = '/app/dashboard';
+                  }
+                }, 1000);
+
                 resolve(response);
               } catch (error) {
                 console.error('Wallet sync error:', error);

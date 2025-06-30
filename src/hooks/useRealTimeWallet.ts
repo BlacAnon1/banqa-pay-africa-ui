@@ -11,7 +11,7 @@ interface Wallet {
   updated_at: string;
 }
 
-export const useWallet = () => {
+export const useRealTimeWallet = () => {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [previousBalance, setPreviousBalance] = useState<number | null>(null);
@@ -33,14 +33,16 @@ export const useWallet = () => {
         return;
       }
 
-      // Show balance change notification only for positive changes
-      if (previousBalance !== null && data.balance > previousBalance) {
+      // Show balance change notification
+      if (previousBalance !== null && data.balance !== previousBalance) {
         const difference = data.balance - previousBalance;
-        toast({
-          title: "Wallet Credited",
-          description: `₦${difference.toLocaleString()} added to your wallet`,
-          duration: 4000,
-        });
+        if (difference > 0) {
+          toast({
+            title: "Wallet Updated",
+            description: `₦${difference.toLocaleString()} added to your wallet`,
+            duration: 5000,
+          });
+        }
       }
 
       setPreviousBalance(data.balance);
@@ -66,6 +68,9 @@ export const useWallet = () => {
 
       if (error) throw error;
 
+      // Force refresh wallet data after sync
+      await fetchWallet();
+
       return { data, error: null };
     } catch (error: any) {
       console.error('Wallet sync error:', error);
@@ -79,7 +84,7 @@ export const useWallet = () => {
     // Set up real-time subscription for wallet updates
     if (user) {
       const channel = supabase
-        .channel('wallet-changes')
+        .channel('wallet-realtime')
         .on(
           'postgres_changes',
           {
@@ -89,7 +94,7 @@ export const useWallet = () => {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
-            console.log('Wallet updated:', payload);
+            console.log('Real-time wallet update:', payload);
             fetchWallet();
           }
         )

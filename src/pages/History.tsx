@@ -5,44 +5,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Download } from 'lucide-react';
+import { Search, Filter, Download, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useRealTimeTransactions } from '@/hooks/useRealTimeTransactions';
 
 const History = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.error('Error fetching transactions:', error);
-        } else {
-          setTransactions(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching transactions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTransactions();
-  }, [user]);
+  const { transactions, loading, fetchTransactions } = useRealTimeTransactions();
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = (transaction.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,7 +38,13 @@ const History = () => {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
+  };
+
+  const getTransactionIcon = (type: string) => {
+    return type === 'credit' ? '↗️' : '↙️';
   };
 
   if (loading) {
@@ -78,9 +57,20 @@ const History = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">{t('history.title')}</h1>
-        <p className="text-muted-foreground">{t('history.subtitle')}</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{t('history.title')}</h1>
+          <p className="text-muted-foreground">{t('history.subtitle')}</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={fetchTransactions}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Filters */}
@@ -120,6 +110,16 @@ const History = () => {
         </CardContent>
       </Card>
 
+      {/* Real-time Transaction Updates Banner */}
+      {transactions.length > 0 && (
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+          <p className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+            Live updates enabled - New transactions will appear automatically
+          </p>
+        </div>
+      )}
+
       {/* Transactions List */}
       <Card>
         <CardHeader>
@@ -139,6 +139,9 @@ const History = () => {
                   <div className="flex flex-col sm:flex-row justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
+                        <span className="text-lg">
+                          {getTransactionIcon(transaction.transaction_type)}
+                        </span>
                         <h3 className="font-semibold">
                           {transaction.description || transaction.service_type || t('history.transaction')}
                         </h3>
@@ -155,7 +158,14 @@ const History = () => {
                       </p>
                     </div>
                     <div className="text-right space-y-1">
-                      <p className="font-bold text-lg">{formatCurrency(Number(transaction.amount))}</p>
+                      <p className={`font-bold text-lg ${
+                        transaction.transaction_type === 'credit' 
+                          ? 'text-green-600' 
+                          : 'text-red-600'
+                      }`}>
+                        {transaction.transaction_type === 'credit' ? '+' : '-'}
+                        {formatCurrency(Number(transaction.amount))}
+                      </p>
                       <p className="text-sm text-muted-foreground">{formatDate(transaction.created_at)}</p>
                       <p className="text-xs text-muted-foreground">ID: {transaction.id.slice(0, 8)}...</p>
                     </div>
