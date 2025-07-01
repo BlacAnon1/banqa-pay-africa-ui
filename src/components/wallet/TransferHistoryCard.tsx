@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,6 +70,7 @@ export const TransferHistoryCard = () => {
           
           const senderValid = senderProfile && 
             typeof senderProfile === 'object' && 
+            senderProfile !== null &&
             'full_name' in senderProfile &&
             'email' in senderProfile &&
             'banqa_id' in senderProfile &&
@@ -78,6 +78,7 @@ export const TransferHistoryCard = () => {
           
           const recipientValid = recipientProfile && 
             typeof recipientProfile === 'object' && 
+            recipientProfile !== null &&
             'full_name' in recipientProfile &&
             'email' in recipientProfile &&
             'banqa_id' in recipientProfile &&
