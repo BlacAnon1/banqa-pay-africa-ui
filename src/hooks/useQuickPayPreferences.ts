@@ -24,9 +24,18 @@ export interface QuickPayService {
   type: string;
 }
 
+// Default services that new users will have
+const DEFAULT_SERVICES: QuickPayService[] = [
+  { name: 'airtime', icon: 'Smartphone', color: 'bg-green-500', type: 'telecom' },
+  { name: 'data', icon: 'Wifi', color: 'bg-blue-500', type: 'telecom' },
+  { name: 'bills.electricity', icon: 'Zap', color: 'bg-yellow-500', type: 'utility' },
+  { name: 'bills.water', icon: 'Droplets', color: 'bg-blue-400', type: 'utility' },
+];
+
 export const useQuickPayPreferences = () => {
   const [preferences, setPreferences] = useState<QuickPayPreference[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { user } = useAuth();
 
   const fetchPreferences = async () => {
@@ -43,6 +52,13 @@ export const useQuickPayPreferences = () => {
       if (error) throw error;
 
       setPreferences(data || []);
+      
+      // If user has no preferences, initialize with defaults
+      if (!data || data.length === 0) {
+        await initializeDefaultServices();
+      } else {
+        setHasInitialized(true);
+      }
     } catch (error) {
       console.error('Error fetching quick pay preferences:', error);
       toast({
@@ -52,6 +68,33 @@ export const useQuickPayPreferences = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const initializeDefaultServices = async () => {
+    if (!user?.id || hasInitialized) return;
+
+    try {
+      const defaultPreferences = DEFAULT_SERVICES.map((service, index) => ({
+        user_id: user.id,
+        service_name: service.name,
+        service_icon: service.icon,
+        service_color: service.color,
+        service_type: service.type,
+        display_order: index
+      }));
+
+      const { data, error } = await supabase
+        .from('user_quick_pay_preferences')
+        .insert(defaultPreferences)
+        .select();
+
+      if (error) throw error;
+
+      setPreferences(data || []);
+      setHasInitialized(true);
+    } catch (error) {
+      console.error('Error initializing default services:', error);
     }
   };
 
@@ -79,7 +122,7 @@ export const useQuickPayPreferences = () => {
       setPreferences(prev => [...prev, data]);
       toast({
         title: "Success",
-        description: `${service.name} added to Quick Pay`
+        description: `Service added to Quick Pay`
       });
     } catch (error) {
       console.error('Error adding preference:', error);

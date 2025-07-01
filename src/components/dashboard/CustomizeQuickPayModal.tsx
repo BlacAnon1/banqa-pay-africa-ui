@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useQuickPayPreferences, QuickPayService } from '@/hooks/useQuickPayPreferences';
 import { 
@@ -14,12 +13,15 @@ import {
   Shield, 
   GraduationCap, 
   Banknote,
-  Plus,
   X,
   Car,
   Home,
   Plane,
-  Gift
+  Gift,
+  Tv,
+  Phone,
+  Fuel,
+  Receipt
 } from 'lucide-react';
 
 interface CustomizeQuickPayModalProps {
@@ -28,29 +30,33 @@ interface CustomizeQuickPayModalProps {
 }
 
 const availableServices: QuickPayService[] = [
+  // Core services (some are defaults)
+  { name: 'airtime', icon: 'Smartphone', color: 'bg-green-500', type: 'telecom' },
+  { name: 'data', icon: 'Wifi', color: 'bg-blue-500', type: 'telecom' },
   { name: 'bills.electricity', icon: 'Zap', color: 'bg-yellow-500', type: 'utility' },
-  { name: 'bills.water', icon: 'Droplets', color: 'bg-blue-500', type: 'utility' },
+  { name: 'bills.water', icon: 'Droplets', color: 'bg-blue-400', type: 'utility' },
+  
+  // Additional services users can add
   { name: 'bills.internet', icon: 'Wifi', color: 'bg-purple-500', type: 'utility' },
-  { name: 'bills.airtime', icon: 'Smartphone', color: 'bg-green-500', type: 'telecom' },
-  { name: 'bills.tv', icon: 'CreditCard', color: 'bg-orange-500', type: 'entertainment' },
+  { name: 'bills.tv', icon: 'Tv', color: 'bg-orange-500', type: 'entertainment' },
   { name: 'bills.insurance', icon: 'Shield', color: 'bg-red-500', type: 'financial' },
   { name: 'bills.school', icon: 'GraduationCap', color: 'bg-indigo-500', type: 'education' },
-  { name: 'bills.taxes', icon: 'Banknote', color: 'bg-emerald-600', type: 'government' },
-  { name: 'bills.fuel', icon: 'Car', color: 'bg-gray-600', type: 'transport' },
+  { name: 'bills.taxes', icon: 'Receipt', color: 'bg-emerald-600', type: 'government' },
+  { name: 'bills.fuel', icon: 'Fuel', color: 'bg-gray-600', type: 'transport' },
   { name: 'bills.rent', icon: 'Home', color: 'bg-teal-500', type: 'housing' },
   { name: 'bills.flight', icon: 'Plane', color: 'bg-sky-500', type: 'travel' },
-  { name: 'bills.giftcard', icon: 'Gift', color: 'bg-pink-500', type: 'retail' }
+  { name: 'bills.giftcard', icon: 'Gift', color: 'bg-pink-500', type: 'retail' },
+  { name: 'postpaid', icon: 'Phone', color: 'bg-blue-700', type: 'telecom' },
 ];
 
 const iconMap = {
   Zap, Droplets, Wifi, Smartphone, CreditCard, Shield, 
-  GraduationCap, Banknote, Car, Home, Plane, Gift
+  GraduationCap, Banknote, Car, Home, Plane, Gift, Tv, Phone, Fuel, Receipt
 };
 
 export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPayModalProps) => {
   const { t } = useLanguage();
   const { preferences, addPreference, removePreference } = useQuickPayPreferences();
-  const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
 
   const getIconComponent = (iconName: string) => {
     return iconMap[iconName as keyof typeof iconMap] || Banknote;
@@ -73,12 +79,19 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
     return preferences.some(p => p.service_name === serviceName);
   };
 
+  const getServiceDisplayName = (serviceName: string) => {
+    // Handle special cases for core services
+    if (serviceName === 'airtime') return 'Airtime';
+    if (serviceName === 'data') return 'Data Bundle';
+    return t(serviceName);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">
-            {t('dashboard.customizeQuickPay')}
+            Customize Quick Pay
           </DialogTitle>
         </DialogHeader>
 
@@ -106,7 +119,7 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
                       <IconComponent className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs text-center leading-tight">
-                      {t(service.name)}
+                      {getServiceDisplayName(service.name)}
                     </span>
                   </Button>
                 );
@@ -132,7 +145,7 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
                           <IconComponent className="h-3 w-3 text-white" />
                         </div>
                         <span className="text-xs text-center leading-tight">
-                          {t(preference.service_name)}
+                          {getServiceDisplayName(preference.service_name)}
                         </span>
                       </div>
                       <Button

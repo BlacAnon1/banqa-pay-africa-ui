@@ -19,18 +19,6 @@ const Dashboard = () => {
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
 
-  // Default services for new users
-  const defaultQuickPayServices = [
-    { name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500' },
-    { name: t('bills.water'), icon: Droplets, color: 'bg-blue-500' },
-    { name: t('bills.internet'), icon: Wifi, color: 'bg-purple-500' },
-    { name: t('bills.airtime'), icon: Smartphone, color: 'bg-green-500' },
-    { name: t('bills.tv'), icon: CreditCard, color: 'bg-orange-500' },
-    { name: t('bills.insurance'), icon: Shield, color: 'bg-red-500' },
-    { name: t('bills.school'), icon: GraduationCap, color: 'bg-indigo-500' },
-    { name: t('bills.taxes'), icon: Banknote, color: 'bg-emerald-600' },
-  ];
-
   const iconMap = {
     Zap, Droplets, Wifi, Smartphone, CreditCard: CreditCard, Shield, 
     GraduationCap, Banknote
@@ -48,8 +36,12 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  // Use user preferences if available, otherwise show default services
-  const displayServices = preferences.length > 0 ? preferences : defaultQuickPayServices;
+  const getServiceDisplayName = (serviceName: string) => {
+    // Handle special cases for core services
+    if (serviceName === 'airtime') return 'Airtime';
+    if (serviceName === 'data') return 'Data Bundle';
+    return t(serviceName);
+  };
 
   return (
     <div className="space-y-8 african-pattern-bg min-h-full">
@@ -151,29 +143,39 @@ const Dashboard = () => {
           <CardContent>
             {preferencesLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, i) => (
+                {[...Array(4)].map((_, i) => (
                   <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
                 ))}
               </div>
+            ) : preferences.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">No Quick Pay services configured yet.</p>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCustomizeModal(true)}
+                  className="gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Customize Quick Pay
+                </Button>
+              </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {displayServices.map((service, index) => {
-                  const IconComponent = preferences.length > 0 
-                    ? getIconComponent(service.service_icon) 
-                    : service.icon;
-                  const color = preferences.length > 0 ? service.service_color : service.color;
-                  const name = preferences.length > 0 ? t(service.service_name) : service.name;
+                {preferences.map((preference) => {
+                  const IconComponent = getIconComponent(preference.service_icon);
                   
                   return (
                     <Button
-                      key={preferences.length > 0 ? service.id : index}
+                      key={preference.id}
                       variant="outline"
                       className="h-24 flex flex-col gap-3 hover:bg-primary/5 hover:border-primary rounded-xl cultural-card transition-all duration-300 hover:scale-105"
                     >
-                      <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center shadow-md`}>
+                      <div className={`w-10 h-10 rounded-full ${preference.service_color} flex items-center justify-center shadow-md`}>
                         <IconComponent className="h-5 w-5 text-white" />
                       </div>
-                      <span className="text-xs font-medium text-center leading-tight">{name}</span>
+                      <span className="text-xs font-medium text-center leading-tight">
+                        {getServiceDisplayName(preference.service_name)}
+                      </span>
                     </Button>
                   );
                 })}
