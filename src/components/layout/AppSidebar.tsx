@@ -1,3 +1,4 @@
+
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut } from 'lucide-react';
 import {
@@ -60,7 +61,7 @@ export function AppSidebar() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? 'bg-primary/10 text-primary border-l-4 border-primary shadow-sm'
+                            ? 'bg-primary/10 text-primary border-l-4 border-primary shadow-sm font-semibold'
                             : 'hover:bg-muted hover:text-primary'
                         }`
                       }

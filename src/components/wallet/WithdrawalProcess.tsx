@@ -228,12 +228,26 @@ export const WithdrawalProcess = ({ open, onOpenChange }: WithdrawalProcessProps
               />
             </div>
 
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm">
-                <strong>Withdrawal Details:</strong><br />
-                Amount: ₦{parseFloat(formData.amount).toLocaleString()}<br />
-                Account: {selectedAccount?.bank_name} • ****{selectedAccount?.account_number.slice(-4)}
-              </p>
+            <div className="p-4 bg-card border border-border rounded-lg shadow-sm">
+              <h4 className="font-semibold text-foreground mb-2">Withdrawal Details</h4>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Amount:</span>
+                  <span className="font-medium text-foreground">₦{parseFloat(formData.amount).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Bank:</span>
+                  <span className="font-medium text-foreground">{selectedAccount?.bank_name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Account:</span>
+                  <span className="font-medium text-foreground">****{selectedAccount?.account_number.slice(-4)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Account Name:</span>
+                  <span className="font-medium text-foreground">{selectedAccount?.account_name}</span>
+                </div>
+              </div>
             </div>
 
             <DialogFooter>
