@@ -13,6 +13,7 @@ import { TransactionsList } from '@/components/wallet/TransactionsList';
 import { AddFundsCard } from '@/components/wallet/AddFundsCard';
 import { WithdrawFundsCard } from '@/components/wallet/WithdrawFundsCard';
 import { BankAccountsList } from '@/components/wallet/BankAccountsList';
+import { ApiKeySettings } from '@/components/wallet/ApiKeySettings';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
@@ -54,11 +55,12 @@ const Wallet = () => {
       />
 
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="add-funds">Add Funds</TabsTrigger>
           <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
           <TabsTrigger value="accounts">Bank Accounts</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -85,6 +87,10 @@ const Wallet = () => {
             bankAccounts={bankAccounts}
             onAddAccount={() => setShowAddBankModal(true)}
           />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <ApiKeySettings />
         </TabsContent>
       </Tabs>
 
