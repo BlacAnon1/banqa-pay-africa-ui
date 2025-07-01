@@ -15,6 +15,8 @@ import { WithdrawFundsCard } from '@/components/wallet/WithdrawFundsCard';
 import { BankAccountsList } from '@/components/wallet/BankAccountsList';
 import { SendMoneyModal } from '@/components/wallet/SendMoneyModal';
 import { TransferHistoryCard } from '@/components/wallet/TransferHistoryCard';
+import { BanqaIdCard } from '@/components/wallet/BanqaIdCard';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
@@ -26,6 +28,7 @@ const Wallet = () => {
   const { wallet, loading } = useRealTimeWallet();
   const { transactions, loading: transactionsLoading } = useRealTimeTransactions();
   const { bankAccounts } = useBankAccounts();
+  const { profile } = useAuth();
 
   const handleWithdrawClick = () => {
     if (bankAccounts.length === 0) {
@@ -47,14 +50,20 @@ const Wallet = () => {
         <p className="text-muted-foreground">Manage your funds and view transactions</p>
       </div>
       
-      <WalletBalance
-        wallet={wallet}
-        loading={loading}
-        showBalance={showBalance}
-        onToggleBalance={() => setShowBalance(!showBalance)}
-        onAddFunds={() => setShowAddFundsModal(true)}
-        onWithdraw={handleWithdrawClick}
-      />
+      <div className="grid gap-6 md:grid-cols-2">
+        <WalletBalance
+          wallet={wallet}
+          loading={loading}
+          showBalance={showBalance}
+          onToggleBalance={() => setShowBalance(!showBalance)}
+          onAddFunds={() => setShowAddFundsModal(true)}
+          onWithdraw={handleWithdrawClick}
+        />
+        
+        {profile?.banqa_id && (
+          <BanqaIdCard banqaId={profile.banqa_id} />
+        )}
+      </div>
 
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
@@ -77,7 +86,7 @@ const Wallet = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Send Money to Banqa Users</h3>
               <p className="text-muted-foreground">
-                Send money instantly to other Banqa users across Africa with automatic currency conversion.
+                Send money instantly to other Banqa users using their unique Banqa ID with automatic currency conversion.
               </p>
               <button
                 onClick={() => setShowSendMoneyModal(true)}

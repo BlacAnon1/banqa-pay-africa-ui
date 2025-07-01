@@ -436,6 +436,7 @@ export type Database = {
           address_line_1: string | null
           address_line_2: string | null
           avatar_url: string | null
+          banqa_id: string
           city: string | null
           country_of_residence: string
           created_at: string | null
@@ -468,6 +469,7 @@ export type Database = {
           address_line_1?: string | null
           address_line_2?: string | null
           avatar_url?: string | null
+          banqa_id: string
           city?: string | null
           country_of_residence: string
           created_at?: string | null
@@ -500,6 +502,7 @@ export type Database = {
           address_line_1?: string | null
           address_line_2?: string | null
           avatar_url?: string | null
+          banqa_id?: string
           city?: string | null
           country_of_residence?: string
           created_at?: string | null
@@ -923,6 +926,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_banqa_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       update_currency_exchange_rate: {
         Args: { currency_code: string; new_rate: number }
         Returns: boolean

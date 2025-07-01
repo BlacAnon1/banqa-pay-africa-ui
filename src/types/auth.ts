@@ -32,6 +32,7 @@ export interface UserProfile {
   two_factor_enabled?: boolean;
   avatar_url?: string;
   user_role?: string;
+  banqa_id?: string;
 }
 
 export interface AuthContextType {

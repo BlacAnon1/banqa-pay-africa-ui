@@ -24,7 +24,7 @@ interface UserProfile {
   id: string;
   full_name: string;
   email: string;
-  phone_number?: string;
+  banqa_id: string;
 }
 
 interface SendMoneyModalProps {
@@ -36,8 +36,7 @@ interface SendMoneyModalProps {
 export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyModalProps) => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<UserProfile[]>([]);
+  const [banqaId, setBanqaId] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState<UserProfile | null>(null);
   const [amount, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('NGN');
@@ -52,6 +51,12 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
   useEffect(() => {
     if (open) {
       fetchCurrencies();
+      // Reset form when modal opens
+      setStep(1);
+      setBanqaId('');
+      setSelectedRecipient(null);
+      setAmount('');
+      setDescription('');
     }
   }, [open]);
 
@@ -73,19 +78,33 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
     }
   };
 
-  const searchUsers = async () => {
-    if (!searchTerm.trim()) return;
+  const searchUserByBanqaId = async () => {
+    if (!banqaId.trim()) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a Banqa ID",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setSearchLoading(true);
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, phone_number')
-      .or(`full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone_number.ilike.%${searchTerm}%`)
+      .select('id, full_name, email, banqa_id')
+      .eq('banqa_id', banqaId.toUpperCase())
       .neq('id', user?.id)
-      .limit(10);
+      .single();
 
-    if (!error && data) {
-      setSearchResults(data);
+    if (error || !data) {
+      toast({
+        title: "User Not Found",
+        description: "No user found with this Banqa ID",
+        variant: "destructive"
+      });
+    } else {
+      setSelectedRecipient(data);
+      setStep(2);
     }
     setSearchLoading(false);
   };
@@ -140,7 +159,7 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
         
         // Reset form
         setStep(1);
-        setSearchTerm('');
+        setBanqaId('');
         setSelectedRecipient(null);
         setAmount('');
         setDescription('');
@@ -171,44 +190,23 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="search">Search for recipient</Label>
+              <Label htmlFor="banqaId">Enter Recipient's Banqa ID</Label>
               <div className="flex gap-2">
                 <Input
-                  id="search"
-                  placeholder="Enter name, email, or phone number"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
+                  id="banqaId"
+                  placeholder="e.g., BQ12345678"
+                  value={banqaId}
+                  onChange={(e) => setBanqaId(e.target.value.toUpperCase())}
+                  onKeyPress={(e) => e.key === 'Enter' && searchUserByBanqaId()}
                 />
-                <Button onClick={searchUsers} disabled={searchLoading}>
+                <Button onClick={searchUserByBanqaId} disabled={searchLoading}>
                   <Search className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Ask the recipient for their Banqa ID to send money
+              </p>
             </div>
-
-            {searchResults.length > 0 && (
-              <div className="space-y-2">
-                <Label>Select recipient:</Label>
-                {searchResults.map((profile) => (
-                  <Card key={profile.id} className="cursor-pointer hover:bg-muted/50" onClick={() => {
-                    setSelectedRecipient(profile);
-                    setStep(2);
-                  }}>
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{profile.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{profile.email}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
@@ -225,7 +223,7 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
                   </div>
                   <div>
                     <p className="font-medium">{selectedRecipient.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{selectedRecipient.email}</p>
+                    <p className="text-sm text-muted-foreground">Banqa ID: {selectedRecipient.banqa_id}</p>
                   </div>
                 </div>
               </CardContent>

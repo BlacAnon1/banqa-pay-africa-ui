@@ -1,34 +1,10 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Define the raw Supabase response type
-interface SupabaseTransferResponse {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  sender_currency: string;
-  recipient_currency: string;
-  amount_sent: number;
-  amount_received: number;
-  exchange_rate: number;
-  transfer_fee: number;
-  status: string;
-  reference_number: string;
-  description: string;
-  created_at: string;
-  sender_profile: {
-    full_name: string;
-    email: string;
-  } | null;
-  recipient_profile: {
-    full_name: string;
-    email: string;
-  } | null;
-}
 
 interface MoneyTransfer {
   id: string;
@@ -47,10 +23,12 @@ interface MoneyTransfer {
   sender_profile?: {
     full_name: string;
     email: string;
+    banqa_id: string;
   } | null;
   recipient_profile?: {
     full_name: string;
     email: string;
+    banqa_id: string;
   } | null;
 }
 
@@ -73,32 +51,15 @@ export const TransferHistoryCard = () => {
         .from('money_transfers')
         .select(`
           *,
-          sender_profile:profiles!sender_id(full_name, email),
-          recipient_profile:profiles!recipient_id(full_name, email)
+          sender_profile:profiles!sender_id(full_name, email, banqa_id),
+          recipient_profile:profiles!recipient_id(full_name, email, banqa_id)
         `)
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (!error && data) {
-        // Filter and transform the data to handle potential query errors
-        const validTransfers = data
-          .filter((transfer): transfer is SupabaseTransferResponse => {
-            // Check if the profiles are valid objects or null (not query errors)
-            const senderProfileValid = transfer.sender_profile === null || 
-              (typeof transfer.sender_profile === 'object' && 'full_name' in transfer.sender_profile);
-            const recipientProfileValid = transfer.recipient_profile === null || 
-              (typeof transfer.recipient_profile === 'object' && 'full_name' in transfer.recipient_profile);
-            
-            return senderProfileValid && recipientProfileValid;
-          })
-          .map((transfer): MoneyTransfer => ({
-            ...transfer,
-            sender_profile: transfer.sender_profile,
-            recipient_profile: transfer.recipient_profile
-          }));
-
-        setTransfers(validTransfers);
+        setTransfers(data as MoneyTransfer[]);
       }
     } catch (error) {
       console.error('Error fetching transfers:', error);
@@ -175,7 +136,9 @@ export const TransferHistoryCard = () => {
                         <p className="font-medium">
                           {isSent ? 'Sent to' : 'Received from'} {otherUser?.full_name || 'Unknown User'}
                         </p>
-                        <p className="text-sm text-muted-foreground">{otherUser?.email || 'No email available'}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {otherUser?.banqa_id ? `Banqa ID: ${otherUser.banqa_id}` : 'No Banqa ID available'}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
