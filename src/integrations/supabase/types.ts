@@ -166,6 +166,42 @@ export type Database = {
           },
         ]
       }
+      currencies: {
+        Row: {
+          code: string
+          country: string
+          created_at: string
+          exchange_rate_to_base: number
+          id: string
+          is_active: boolean
+          name: string
+          symbol: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          country: string
+          created_at?: string
+          exchange_rate_to_base?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          symbol: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          country?: string
+          created_at?: string
+          exchange_rate_to_base?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          symbol?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kyc_documents: {
         Row: {
           created_at: string | null
@@ -274,6 +310,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      money_transfers: {
+        Row: {
+          amount_received: number
+          amount_sent: number
+          created_at: string
+          description: string | null
+          exchange_rate: number
+          id: string
+          processed_at: string | null
+          recipient_currency: string
+          recipient_id: string
+          reference_number: string
+          sender_currency: string
+          sender_id: string
+          status: string
+          transfer_fee: number
+          updated_at: string
+        }
+        Insert: {
+          amount_received: number
+          amount_sent: number
+          created_at?: string
+          description?: string | null
+          exchange_rate?: number
+          id?: string
+          processed_at?: string | null
+          recipient_currency?: string
+          recipient_id: string
+          reference_number: string
+          sender_currency?: string
+          sender_id: string
+          status?: string
+          transfer_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_received?: number
+          amount_sent?: number
+          created_at?: string
+          description?: string | null
+          exchange_rate?: number
+          id?: string
+          processed_at?: string | null
+          recipient_currency?: string
+          recipient_id?: string
+          reference_number?: string
+          sender_currency?: string
+          sender_id?: string
+          status?: string
+          transfer_fee?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -833,7 +923,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_currency_exchange_rate: {
+        Args: { currency_code: string; new_rate: number }
+        Returns: boolean
+      }
     }
     Enums: {
       account_type: "savings" | "current" | "crypto_wallet"

@@ -13,12 +13,15 @@ import { TransactionsList } from '@/components/wallet/TransactionsList';
 import { AddFundsCard } from '@/components/wallet/AddFundsCard';
 import { WithdrawFundsCard } from '@/components/wallet/WithdrawFundsCard';
 import { BankAccountsList } from '@/components/wallet/BankAccountsList';
+import { SendMoneyModal } from '@/components/wallet/SendMoneyModal';
+import { TransferHistoryCard } from '@/components/wallet/TransferHistoryCard';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showAddBankModal, setShowAddBankModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [showSendMoneyModal, setShowSendMoneyModal] = useState(false);
   
   const { wallet, loading } = useRealTimeWallet();
   const { transactions, loading: transactionsLoading } = useRealTimeTransactions();
@@ -54,8 +57,9 @@ const Wallet = () => {
       />
 
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="send-money">Send Money</TabsTrigger>
           <TabsTrigger value="add-funds">Add Funds</TabsTrigger>
           <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
           <TabsTrigger value="accounts">Bank Accounts</TabsTrigger>
@@ -66,6 +70,24 @@ const Wallet = () => {
             transactions={transactions}
             loading={transactionsLoading}
           />
+        </TabsContent>
+
+        <TabsContent value="send-money" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Send Money to Banqa Users</h3>
+              <p className="text-muted-foreground">
+                Send money instantly to other Banqa users across Africa with automatic currency conversion.
+              </p>
+              <button
+                onClick={() => setShowSendMoneyModal(true)}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 rounded-md font-medium"
+              >
+                Send Money Now
+              </button>
+            </div>
+            <TransferHistoryCard />
+          </div>
         </TabsContent>
 
         <TabsContent value="add-funds">
@@ -101,6 +123,12 @@ const Wallet = () => {
       <WithdrawalProcess
         open={showWithdrawalModal}
         onOpenChange={setShowWithdrawalModal}
+      />
+
+      <SendMoneyModal
+        open={showSendMoneyModal}
+        onOpenChange={setShowSendMoneyModal}
+        userBalance={wallet?.balance || 0}
       />
     </div>
   );
