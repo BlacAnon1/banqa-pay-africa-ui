@@ -14,69 +14,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // For development, let's bypass authentication temporarily
-  const mockUser: User = {
-    id: 'demo-user',
-    email: 'demo@banqa.com',
-    app_metadata: {},
-    user_metadata: { full_name: 'Demo User' },
-    aud: 'authenticated',
-    created_at: new Date().toISOString(),
-    phone: '',
-    confirmation_sent_at: '',
-    confirmed_at: new Date().toISOString(),
-    email_confirmed_at: new Date().toISOString(),
-    invited_at: '',
-    last_sign_in_at: new Date().toISOString(),
-    role: 'authenticated',
-    updated_at: new Date().toISOString()
-  };
-
-  const mockProfile: UserProfile = {
-    id: 'demo-user',
-    email: 'demo@banqa.com',
-    full_name: 'Demo User',
-    country_of_residence: 'Nigeria',
-    profile_completed: false,
-    terms_accepted: true,
-    privacy_policy_accepted: true
-  };
-
   useEffect(() => {
-    // Set mock data immediately for development
-    setUser(mockUser);
-    setProfile(mockProfile);
-    setLoading(false);
-
-    // Still set up real auth listener for when auth is properly implemented
+    console.log('Setting up auth state listener');
+    
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
+        setUser(session?.user ?? null);
         
         if (session?.user) {
-          setUser(session.user);
+          // Fetch user profile when authenticated
           setTimeout(async () => {
             const profileData = await profileService.fetchProfile(session.user.id);
             setProfile(profileData);
           }, 0);
         } else {
-          // Fall back to mock data if no real session
-          setUser(mockUser);
-          setProfile(mockProfile);
+          setProfile(null);
         }
         
         setLoading(false);
       }
     );
 
-    // Check for existing session
+    // Check for initial session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.id);
       setSession(session);
+      setUser(session?.user ?? null);
       
       if (session?.user) {
-        setUser(session.user);
         const profileData = await profileService.fetchProfile(session.user.id);
         setProfile(profileData);
       }
@@ -109,10 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     await authService.signOut();
-    // Reset to mock data
-    setUser(mockUser);
+    setUser(null);
     setSession(null);
-    setProfile(mockProfile);
+    setProfile(null);
   };
 
   const updateProfile = async (profileData: Partial<UserProfile>) => {
@@ -141,7 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       session,
       profile,
-      isAuthenticated: true, // Always authenticated for demo
+      isAuthenticated: !!user,
       loading,
       signUp,
       signIn,

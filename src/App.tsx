@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -49,28 +50,42 @@ const App = () => (
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 
-                {/* Main App Routes - Direct access with AppLayout wrapper */}
-                <Route path="/dashboard" element={<AppLayout />}>
-                  <Route index element={<Dashboard />} />
-                </Route>
-                <Route path="/pay-bills" element={<AppLayout />}>
-                  <Route index element={<PayBills />} />
-                </Route>
-                <Route path="/history" element={<AppLayout />}>
-                  <Route index element={<History />} />
-                </Route>
-                <Route path="/wallet" element={<AppLayout />}>
-                  <Route index element={<Wallet />} />
-                </Route>
-                <Route path="/support" element={<AppLayout />}>
-                  <Route index element={<Support />} />
-                </Route>
-                <Route path="/profile/complete" element={<AppLayout />}>
-                  <Route index element={<ProfileCompletion />} />
-                </Route>
-                <Route path="/kyc/documents" element={<AppLayout />}>
-                  <Route index element={<DocumentUpload />} />
-                </Route>
+                {/* Protected App Routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <AppLayout><Dashboard /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/pay-bills" element={
+                  <ProtectedRoute>
+                    <AppLayout><PayBills /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/history" element={
+                  <ProtectedRoute>
+                    <AppLayout><History /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/wallet" element={
+                  <ProtectedRoute>
+                    <AppLayout><Wallet /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/support" element={
+                  <ProtectedRoute>
+                    <AppLayout><Support /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile/complete" element={
+                  <ProtectedRoute>
+                    <AppLayout><ProfileCompletion /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/kyc/documents" element={
+                  <ProtectedRoute>
+                    <AppLayout><DocumentUpload /></AppLayout>
+                  </ProtectedRoute>
+                } />
                 
                 {/* Legacy /app routes for backward compatibility */}
                 <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />

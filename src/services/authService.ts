@@ -12,10 +12,13 @@ export const authService = {
         countryOfResidence: data.countryOfResidence
       });
       
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: data.fullName,
             phone_number: data.phoneNumber,
