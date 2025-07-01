@@ -24,8 +24,8 @@ interface MoneyTransfer {
   description: string;
   created_at: string;
   processed_at: string;
-  sender_profile?: Profile | null;
-  recipient_profile?: Profile | null;
+  sender_profile: Profile;
+  recipient_profile: Profile;
 }
 
 export const TransferHistoryCard = () => {
@@ -61,18 +61,30 @@ export const TransferHistoryCard = () => {
       }
 
       // Filter and validate the data
-      const validTransfers = (data || []).filter(transfer => {
-        // Check if profiles exist and are valid objects (not error objects)
-        const senderValid = transfer.sender_profile && 
-          typeof transfer.sender_profile === 'object' && 
-          'full_name' in transfer.sender_profile;
-        
-        const recipientValid = transfer.recipient_profile && 
-          typeof transfer.recipient_profile === 'object' && 
-          'full_name' in transfer.recipient_profile;
+      const validTransfers: MoneyTransfer[] = [];
+      
+      if (data) {
+        for (const transfer of data) {
+          // Check if profiles exist and are valid objects (not error objects)
+          const senderValid = transfer.sender_profile && 
+            typeof transfer.sender_profile === 'object' && 
+            'full_name' in transfer.sender_profile &&
+            !('error' in transfer.sender_profile);
+          
+          const recipientValid = transfer.recipient_profile && 
+            typeof transfer.recipient_profile === 'object' && 
+            'full_name' in transfer.recipient_profile &&
+            !('error' in transfer.recipient_profile);
 
-        return senderValid && recipientValid;
-      }) as MoneyTransfer[];
+          if (senderValid && recipientValid) {
+            validTransfers.push({
+              ...transfer,
+              sender_profile: transfer.sender_profile as Profile,
+              recipient_profile: transfer.recipient_profile as Profile
+            });
+          }
+        }
+      }
 
       setTransfers(validTransfers);
     } catch (error) {
@@ -113,11 +125,6 @@ export const TransferHistoryCard = () => {
             {transfers.map((transfer) => {
               const isSender = transfer.sender_id === user?.id;
               const otherParty = isSender ? transfer.recipient_profile : transfer.sender_profile;
-              
-              // Safety check - this should not happen due to filtering above
-              if (!otherParty) {
-                return null;
-              }
               
               return (
                 <div key={transfer.id} className="flex items-center justify-between p-3 border rounded-lg">
