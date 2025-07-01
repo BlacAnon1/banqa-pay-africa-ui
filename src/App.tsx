@@ -50,42 +50,20 @@ const App = () => (
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 
-                {/* Protected App Routes */}
-                <Route path="/dashboard" element={
+                {/* Protected App Routes with AppLayout */}
+                <Route path="/" element={
                   <ProtectedRoute>
-                    <AppLayout><Dashboard /></AppLayout>
+                    <AppLayout />
                   </ProtectedRoute>
-                } />
-                <Route path="/pay-bills" element={
-                  <ProtectedRoute>
-                    <AppLayout><PayBills /></AppLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/history" element={
-                  <ProtectedRoute>
-                    <AppLayout><History /></AppLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wallet" element={
-                  <ProtectedRoute>
-                    <AppLayout><Wallet /></AppLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/support" element={
-                  <ProtectedRoute>
-                    <AppLayout><Support /></AppLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile/complete" element={
-                  <ProtectedRoute>
-                    <AppLayout><ProfileCompletion /></AppLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/kyc/documents" element={
-                  <ProtectedRoute>
-                    <AppLayout><DocumentUpload /></AppLayout>
-                  </ProtectedRoute>
-                } />
+                }>
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="pay-bills" element={<PayBills />} />
+                  <Route path="history" element={<History />} />
+                  <Route path="wallet" element={<Wallet />} />
+                  <Route path="support" element={<Support />} />
+                  <Route path="profile/complete" element={<ProfileCompletion />} />
+                  <Route path="kyc/documents" element={<DocumentUpload />} />
+                </Route>
                 
                 {/* Legacy /app routes for backward compatibility */}
                 <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
