@@ -19,13 +19,13 @@ const Dashboard = () => {
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
 
-  const iconMap = {
-    Zap, Droplets, Wifi, Smartphone, CreditCard: CreditCard, Shield, 
+  const iconMap: Record<string, React.ComponentType<any>> = {
+    Zap, Droplets, Wifi, Smartphone, CreditCard, Shield, 
     GraduationCap, Banknote
   };
 
   const getIconComponent = (iconName: string) => {
-    return iconMap[iconName as keyof typeof iconMap] || Banknote;
+    return iconMap[iconName] || Banknote;
   };
 
   const formatCurrency = (amount: number) => {

@@ -49,7 +49,7 @@ const availableServices: QuickPayService[] = [
   { name: 'postpaid', icon: 'Phone', color: 'bg-blue-700', type: 'telecom' },
 ];
 
-const iconMap = {
+const iconMap: Record<string, React.ComponentType<any>> = {
   Zap, Droplets, Wifi, Smartphone, CreditCard, Shield, 
   GraduationCap, Banknote, Car, Home, Plane, Gift, Tv, Phone, Fuel, Receipt
 };
@@ -59,7 +59,7 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
   const { preferences, addPreference, removePreference } = useQuickPayPreferences();
 
   const getIconComponent = (iconName: string) => {
-    return iconMap[iconName as keyof typeof iconMap] || Banknote;
+    return iconMap[iconName] || Banknote;
   };
 
   const handleServiceToggle = (service: QuickPayService) => {
