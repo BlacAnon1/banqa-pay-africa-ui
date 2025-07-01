@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -8,23 +7,25 @@ const TermsOfService = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="gap-2 bg-background hover:bg-muted border-2 shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="font-medium">Back</span>
+          </Button>
+        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Terms of Service</CardTitle>
-            <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
+        <Card className="shadow-lg">
+          <CardHeader className="bg-muted/30">
+            <CardTitle className="text-3xl font-bold text-foreground">Terms of Service</CardTitle>
+            <p className="text-muted-foreground text-lg">Last updated: {new Date().toLocaleDateString()}</p>
           </CardHeader>
-          <CardContent className="prose max-w-none space-y-6">
+          <CardContent className="prose max-w-none space-y-8 p-8">
             <section>
               <h3 className="text-lg font-semibold mb-3">Acceptance of Terms</h3>
               <p className="text-sm text-muted-foreground">

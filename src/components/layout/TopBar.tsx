@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { Bell, Globe, Sun, Moon } from 'lucide-react';
+import { Globe, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import {
@@ -8,9 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
-import { BanqaLogo } from '@/components/ui/BanqaLogo';
 import { AfricanLogo } from '@/components/ui/AfricanLogo';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,13 +96,8 @@ export function TopBar() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Notifications */}
-          <Button variant="outline" size="sm" className="relative border-primary/20 hover:border-primary rounded-xl">
-            <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-2 -right-2 px-1 py-0 text-xs h-5 w-5 rounded-full bg-accent hover:bg-accent opacity-0">
-              0
-            </Badge>
-          </Button>
+          {/* Real-time Notifications */}
+          <NotificationCenter />
 
           {/* Theme Toggle */}
           <Button 

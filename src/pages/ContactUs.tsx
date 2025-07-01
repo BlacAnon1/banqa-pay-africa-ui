@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,27 +41,29 @@ const ContactUs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-6xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6 gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+            className="gap-2 bg-background hover:bg-muted border-2 shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="font-medium">Back</span>
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Contact Form */}
-          <Card>
-            <CardHeader>
+          <Card className="shadow-lg">
+            <CardHeader className="bg-muted/30">
               <CardTitle className="text-2xl font-bold">Get in Touch</CardTitle>
               <p className="text-muted-foreground">
                 Have a question or need help? We're here to assist you.
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -128,11 +129,11 @@ const ContactUs = () => {
 
           {/* Contact Information */}
           <div className="space-y-6">
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="bg-muted/30">
                 <CardTitle className="text-xl font-bold">Contact Information</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6">
                 <div className="flex items-start gap-4">
                   <Mail className="h-5 w-5 text-primary mt-1" />
                   <div>
@@ -177,11 +178,11 @@ const ContactUs = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="bg-muted/30">
                 <CardTitle className="text-xl font-bold">Frequently Asked Questions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-6">
                 <div>
                   <h4 className="font-semibold text-sm">How do I reset my password?</h4>
                   <p className="text-sm text-muted-foreground">
