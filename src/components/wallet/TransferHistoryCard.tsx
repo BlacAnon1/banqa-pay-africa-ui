@@ -23,11 +23,11 @@ interface MoneyTransfer {
   sender_profile?: {
     full_name: string;
     email: string;
-  };
+  } | null;
   recipient_profile?: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export const TransferHistoryCard = () => {
@@ -132,9 +132,9 @@ export const TransferHistoryCard = () => {
                       </div>
                       <div>
                         <p className="font-medium">
-                          {isSent ? 'Sent to' : 'Received from'} {otherUser?.full_name}
+                          {isSent ? 'Sent to' : 'Received from'} {otherUser?.full_name || 'Unknown User'}
                         </p>
-                        <p className="text-sm text-muted-foreground">{otherUser?.email}</p>
+                        <p className="text-sm text-muted-foreground">{otherUser?.email || 'No email available'}</p>
                       </div>
                     </div>
                     <div className="text-right">
