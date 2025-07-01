@@ -594,6 +594,45 @@ export type Database = {
           },
         ]
       }
+      user_quick_pay_preferences: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          service_color: string
+          service_icon: string
+          service_name: string
+          service_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          service_color: string
+          service_icon: string
+          service_name: string
+          service_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          service_color?: string
+          service_icon?: string
+          service_name?: string
+          service_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       virtual_accounts: {
         Row: {
           account_name: string

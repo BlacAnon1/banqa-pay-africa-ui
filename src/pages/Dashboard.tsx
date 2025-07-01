@@ -1,10 +1,13 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus } from 'lucide-react';
+import { CreditCard, Zap, Droplets, Wifi, Banknote, TrendingUp, Smartphone, Shield, GraduationCap, Plus, Settings } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
+import { useQuickPayPreferences } from '@/hooks/useQuickPayPreferences';
 import { AddFundsModal } from '@/components/wallet/AddFundsModal';
+import { CustomizeQuickPayModal } from '@/components/dashboard/CustomizeQuickPayModal';
 import { AfricanLogo } from '@/components/ui/AfricanLogo';
 import { useState } from 'react';
 
@@ -12,9 +15,12 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { profile } = useAuth();
   const { wallet, loading } = useRealTimeWallet();
+  const { preferences, loading: preferencesLoading } = useQuickPayPreferences();
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
 
-  const quickPayServices = [
+  // Default services for new users
+  const defaultQuickPayServices = [
     { name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500' },
     { name: t('bills.water'), icon: Droplets, color: 'bg-blue-500' },
     { name: t('bills.internet'), icon: Wifi, color: 'bg-purple-500' },
@@ -25,6 +31,15 @@ const Dashboard = () => {
     { name: t('bills.taxes'), icon: Banknote, color: 'bg-emerald-600' },
   ];
 
+  const iconMap = {
+    Zap, Droplets, Wifi, Smartphone, CreditCard: CreditCard, Shield, 
+    GraduationCap, Banknote
+  };
+
+  const getIconComponent = (iconName: string) => {
+    return iconMap[iconName as keyof typeof iconMap] || Banknote;
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -32,6 +47,9 @@ const Dashboard = () => {
       minimumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Use user preferences if available, otherwise show default services
+  const displayServices = preferences.length > 0 ? preferences : defaultQuickPayServices;
 
   return (
     <div className="space-y-8 african-pattern-bg min-h-full">
@@ -114,24 +132,53 @@ const Dashboard = () => {
         {/* Quick Pay */}
         <Card className="lg:col-span-2 cultural-card border-primary/20">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">{t('dashboard.quickPay')}</CardTitle>
-            <CardDescription className="text-base">{t('dashboard.quickPaySubtitle')}</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold text-primary">{t('dashboard.quickPay')}</CardTitle>
+                <CardDescription className="text-base">{t('dashboard.quickPaySubtitle')}</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowCustomizeModal(true)}
+              >
+                <Settings className="h-4 w-4" />
+                Customize
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {quickPayServices.map((service) => (
-                <Button
-                  key={service.name}
-                  variant="outline"
-                  className="h-24 flex flex-col gap-3 hover:bg-primary/5 hover:border-primary rounded-xl cultural-card transition-all duration-300 hover:scale-105"
-                >
-                  <div className={`w-10 h-10 rounded-full ${service.color} flex items-center justify-center shadow-md`}>
-                    <service.icon className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-center leading-tight">{service.name}</span>
-                </Button>
-              ))}
-            </div>
+            {preferencesLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {displayServices.map((service, index) => {
+                  const IconComponent = preferences.length > 0 
+                    ? getIconComponent(service.service_icon) 
+                    : service.icon;
+                  const color = preferences.length > 0 ? service.service_color : service.color;
+                  const name = preferences.length > 0 ? t(service.service_name) : service.name;
+                  
+                  return (
+                    <Button
+                      key={preferences.length > 0 ? service.id : index}
+                      variant="outline"
+                      className="h-24 flex flex-col gap-3 hover:bg-primary/5 hover:border-primary rounded-xl cultural-card transition-all duration-300 hover:scale-105"
+                    >
+                      <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center shadow-md`}>
+                        <IconComponent className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-xs font-medium text-center leading-tight">{name}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -166,6 +213,11 @@ const Dashboard = () => {
       <AddFundsModal 
         open={showAddFundsModal}
         onOpenChange={setShowAddFundsModal}
+      />
+
+      <CustomizeQuickPayModal
+        open={showCustomizeModal}
+        onOpenChange={setShowCustomizeModal}
       />
     </div>
   );
