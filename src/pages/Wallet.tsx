@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,15 +10,20 @@ import { AddFundsModal } from '@/components/wallet/AddFundsModal';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 import { useRealTimeTransactions } from '@/hooks/useRealTimeTransactions';
 import { format } from 'date-fns';
+import { AddBankAccountModal } from '@/components/wallet/AddBankAccountModal';
+import { WithdrawalProcess } from '@/components/wallet/WithdrawalProcess';
+import { useBankAccounts } from '@/hooks/useBankAccounts';
 
 const Wallet = () => {
   const [showBalance, setShowBalance] = useState(true);
   const [addFundsAmount, setAddFundsAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  const [showAddBankModal, setShowAddBankModal] = useState(false);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   
   const { wallet, loading } = useRealTimeWallet();
   const { transactions, loading: transactionsLoading } = useRealTimeTransactions();
+  const { bankAccounts } = useBankAccounts();
 
   const getTransactionIcon = (type: string) => {
     if (type === 'credit' || type === 'wallet_topup') {
@@ -69,13 +73,26 @@ const Wallet = () => {
     }
   };
 
+  const handleWithdrawClick = () => {
+    if (bankAccounts.length === 0) {
+      toast({
+        title: "No Bank Account",
+        description: "Please add a bank account first to withdraw funds",
+        variant: "destructive"
+      });
+      setShowAddBankModal(true);
+      return;
+    }
+    setShowWithdrawalModal(true);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Wallet</h1>
         <p className="text-muted-foreground">Manage your funds and view transactions</p>
       </div>
-
+      
       {/* Balance Card */}
       <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
         <CardHeader>
@@ -117,7 +134,11 @@ const Wallet = () => {
               <Plus className="h-4 w-4" />
               Add Funds
             </Button>
-            <Button variant="outline" className="border-white text-white hover:bg-emerald-600 gap-2">
+            <Button 
+              variant="outline" 
+              className="border-white text-white hover:bg-emerald-600 gap-2"
+              onClick={handleWithdrawClick}
+            >
               <Minus className="h-4 w-4" />
               Withdraw
             </Button>
@@ -126,10 +147,11 @@ const Wallet = () => {
       </Card>
 
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="add-funds">Add Funds</TabsTrigger>
           <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+          <TabsTrigger value="accounts">Bank Accounts</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -235,39 +257,124 @@ const Wallet = () => {
               <CardDescription>Transfer money from your wallet to your bank account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="withdraw-amount">Amount (₦)</Label>
-                <Input
-                  id="withdraw-amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Available balance: ₦{wallet?.balance?.toLocaleString() || '0.00'}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Bank Account</Label>
-                <div className="p-4 border rounded-lg">
-                  <p className="font-medium">First Bank of Nigeria</p>
-                  <p className="text-sm text-muted-foreground">Account: ****1234</p>
-                  <p className="text-sm text-muted-foreground">John Doe</p>
+              {bankAccounts.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Building2 className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-muted-foreground mb-4">No bank accounts added</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Add a bank account to start withdrawing funds
+                  </p>
+                  <Button onClick={() => setShowAddBankModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Bank Account
+                  </Button>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid gap-4">
+                    {bankAccounts.map((account) => (
+                      <div key={account.id} className="p-4 border rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{account.bank_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {account.account_name} • ****{account.account_number.slice(-4)}
+                            </p>
+                            {account.is_default && (
+                              <Badge variant="secondary" className="text-xs mt-1">Default</Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {account.is_verified && (
+                              <Badge variant="default" className="text-xs">Verified</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  <strong>Note:</strong> Withdrawals are processed within 24 hours. 
-                  A fee of ₦100 applies to withdrawals.
-                </p>
-              </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => setShowWithdrawalModal(true)}
+                    >
+                      <Minus className="h-4 w-4 mr-2" />
+                      Withdraw Funds
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowAddBankModal(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Account
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                Withdraw Funds
-              </Button>
+        <TabsContent value="accounts">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bank Accounts</CardTitle>
+              <CardDescription>Manage your withdrawal bank accounts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {bankAccounts.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Building2 className="h-8 w-8 text-gray-400" />
+                  </div>
+                  <p className="text-muted-foreground mb-2">No bank accounts</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Add your first bank account for withdrawals
+                  </p>
+                  <Button onClick={() => setShowAddBankModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Bank Account
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {bankAccounts.map((account) => (
+                    <div key={account.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{account.bank_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {account.account_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Account: ****{account.account_number.slice(-4)}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2">
+                            {account.is_default && (
+                              <Badge variant="secondary" className="text-xs">Default</Badge>
+                            )}
+                            {account.is_verified && (
+                              <Badge variant="default" className="text-xs">Verified</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => setShowAddBankModal(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Bank Account
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -276,6 +383,16 @@ const Wallet = () => {
       <AddFundsModal 
         open={showAddFundsModal}
         onOpenChange={setShowAddFundsModal}
+      />
+      
+      <AddBankAccountModal
+        open={showAddBankModal}
+        onOpenChange={setShowAddBankModal}
+      />
+      
+      <WithdrawalProcess
+        open={showWithdrawalModal}
+        onOpenChange={setShowWithdrawalModal}
       />
     </div>
   );

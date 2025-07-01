@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bank_accounts: {
+        Row: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          is_verified: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cards: {
         Row: {
           card_number: string
@@ -634,6 +673,121 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      withdrawal_otps: {
+        Row: {
+          bank_account_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_used: boolean | null
+          otp_code: string
+          user_id: string
+          withdrawal_amount: number
+        }
+        Insert: {
+          bank_account_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_used?: boolean | null
+          otp_code: string
+          user_id: string
+          withdrawal_amount: number
+        }
+        Update: {
+          bank_account_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_used?: boolean | null
+          otp_code?: string
+          user_id?: string
+          withdrawal_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_otps_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawal_pins: {
+        Row: {
+          created_at: string | null
+          id: string
+          pin_hash: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pin_hash: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pin_hash?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          amount: number
+          bank_account_id: string
+          created_at: string | null
+          id: string
+          otp_verified: boolean | null
+          pin_verified: boolean | null
+          processed_at: string | null
+          reference_number: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id: string
+          created_at?: string | null
+          id?: string
+          otp_verified?: boolean | null
+          pin_verified?: boolean | null
+          processed_at?: string | null
+          reference_number: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string
+          created_at?: string | null
+          id?: string
+          otp_verified?: boolean | null
+          pin_verified?: boolean | null
+          processed_at?: string | null
+          reference_number?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
