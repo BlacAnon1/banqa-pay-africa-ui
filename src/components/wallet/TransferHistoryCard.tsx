@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,8 +24,8 @@ interface MoneyTransfer {
   description: string;
   created_at: string;
   processed_at: string;
-  sender_profile: Profile;
-  recipient_profile: Profile;
+  sender_profile: Profile | null;
+  recipient_profile: Profile | null;
 }
 
 export const TransferHistoryCard = () => {
@@ -133,6 +134,10 @@ export const TransferHistoryCard = () => {
             {transfers.map((transfer) => {
               const isSender = transfer.sender_id === user?.id;
               const otherParty = isSender ? transfer.recipient_profile : transfer.sender_profile;
+              
+              if (!otherParty) {
+                return null;
+              }
               
               return (
                 <div key={transfer.id} className="flex items-center justify-between p-3 border rounded-lg">

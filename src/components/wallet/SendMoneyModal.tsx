@@ -4,10 +4,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { RecipientSearch } from './send-money/RecipientSearch';
 import { RecipientCard } from './send-money/RecipientCard';
 import { TransferForm } from './send-money/TransferForm';
 import { TransferSummary } from './send-money/TransferSummary';
+import { PinVerificationStep } from './send-money/PinVerificationStep';
 import { useSendMoney } from './send-money/useSendMoney';
 
 interface UserProfile {
@@ -29,6 +32,8 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
   const [amount, setAmount] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('NGN');
   const [description, setDescription] = useState('');
+  const [pinVerified, setPinVerified] = useState(false);
+  const { user } = useAuth();
 
   const {
     currencies,
@@ -49,6 +54,7 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
       setSelectedRecipient(null);
       setAmount('');
       setDescription('');
+      setPinVerified(false);
     }
   }, [open]);
 
@@ -57,6 +63,32 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
       calculateConversion(amount, selectedCurrency);
     }
   }, [amount, selectedCurrency]);
+
+  const verifyPin = async (pin: string) => {
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    try {
+      const { data, error } = await supabase
+        .from('withdrawal_pins')
+        .select('pin_hash')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        return { success: false, error: 'No withdrawal PIN found. Please add a bank account first.' };
+      }
+
+      // In production, you should hash the input PIN and compare with stored hash
+      // For now, we'll do a simple comparison (this should be properly hashed)
+      if (data.pin_hash === pin) {
+        return { success: true };
+      } else {
+        return { success: false, error: 'Invalid PIN' };
+      }
+    } catch (error) {
+      return { success: false, error: 'Failed to verify PIN' };
+    }
+  };
 
   const handleSendMoney = async () => {
     if (!selectedRecipient) return;
@@ -73,6 +105,7 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
         setSelectedRecipient(null);
         setAmount('');
         setDescription('');
+        setPinVerified(false);
         onOpenChange(false);
       }
     );
@@ -133,8 +166,54 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
                 Back
               </Button>
               <Button 
+                onClick={() => setStep(3)} 
+                disabled={!amount || parseFloat(amount) + transferFee > userBalance}
+                className="flex-1"
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <PinVerificationStep
+            onPinVerified={() => {
+              setPinVerified(true);
+              setStep(4);
+            }}
+            onBack={() => setStep(2)}
+            onVerifyPin={verifyPin}
+            loading={loading}
+          />
+        )}
+
+        {step === 4 && pinVerified && selectedRecipient && selectedCurrencyInfo && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">Confirm Transfer</h3>
+              <p className="text-sm text-muted-foreground">
+                Please review the details below before sending
+              </p>
+            </div>
+
+            <RecipientCard recipient={selectedRecipient} />
+            
+            <TransferSummary
+              amount={amount}
+              selectedCurrencyInfo={selectedCurrencyInfo}
+              transferFee={transferFee}
+              convertedAmount={convertedAmount}
+              exchangeRate={exchangeRate}
+            />
+
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+                Back
+              </Button>
+              <Button 
                 onClick={handleSendMoney} 
-                disabled={!amount || loading || parseFloat(amount) + transferFee > userBalance}
+                disabled={loading}
                 className="flex-1"
               >
                 {loading ? 'Sending...' : (

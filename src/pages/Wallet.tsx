@@ -15,7 +15,6 @@ import { WithdrawFundsCard } from '@/components/wallet/WithdrawFundsCard';
 import { BankAccountsList } from '@/components/wallet/BankAccountsList';
 import { SendMoneyModal } from '@/components/wallet/SendMoneyModal';
 import { TransferHistoryCard } from '@/components/wallet/TransferHistoryCard';
-import { BanqaIdCard } from '@/components/wallet/BanqaIdCard';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Wallet = () => {
@@ -50,7 +49,7 @@ const Wallet = () => {
         <p className="text-muted-foreground">Manage your funds and view transactions</p>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6">
         <WalletBalance
           wallet={wallet}
           loading={loading}
@@ -58,15 +57,12 @@ const Wallet = () => {
           onToggleBalance={() => setShowBalance(!showBalance)}
           onAddFunds={() => setShowAddFundsModal(true)}
           onWithdraw={handleWithdrawClick}
+          banqaId={profile?.banqa_id}
         />
-        
-        {profile?.banqa_id && (
-          <BanqaIdCard banqaId={profile.banqa_id} />
-        )}
       </div>
 
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="send-money">Send Money</TabsTrigger>
           <TabsTrigger value="add-funds">Add Funds</TabsTrigger>
