@@ -1,13 +1,16 @@
-
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, Phone, Mail, HelpCircle, Clock } from 'lucide-react';
+import { LiveChatWidget } from '@/components/support/LiveChatWidget';
+import { PhoneSupport } from '@/components/support/PhoneSupport';
+import { EmailSupport } from '@/components/support/EmailSupport';
 
 const Support = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   const faqs = [
     {
       question: "How do I pay my electricity bill?",
@@ -53,7 +56,10 @@ const Support = () => {
             <CardDescription>Chat with our support team</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
+            <Button 
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
+              onClick={() => setIsChatOpen(true)}
+            >
               Start Chat
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">
@@ -69,7 +75,11 @@ const Support = () => {
             <CardDescription>Call our support hotline</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.location.href = 'tel:+2347002267'}
+            >
               +234 700 BANQA (22672)
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">
@@ -85,7 +95,11 @@ const Support = () => {
             <CardDescription>Send us an email</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full">
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => window.location.href = 'mailto:support@banqa.com'}
+            >
               support@banqa.com
             </Button>
             <p className="text-xs text-center text-muted-foreground mt-2">
@@ -96,10 +110,12 @@ const Support = () => {
       </div>
 
       <Tabs defaultValue="faq" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="faq">FAQ</TabsTrigger>
           <TabsTrigger value="tickets">My Tickets</TabsTrigger>
-          <TabsTrigger value="contact">Contact Form</TabsTrigger>
+          <TabsTrigger value="chat">Live Chat</TabsTrigger>
+          <TabsTrigger value="phone">Phone</TabsTrigger>
+          <TabsTrigger value="email">Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value="faq">
@@ -162,46 +178,69 @@ const Support = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="contact">
+        <TabsContent value="chat">
           <Card>
             <CardHeader>
-              <CardTitle>Contact Support</CardTitle>
-              <CardDescription>Send us a message and we'll get back to you</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Live Chat Support
+              </CardTitle>
+              <CardDescription>Get instant help from our support team</CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Subject</label>
-                    <Input placeholder="Brief description of your issue" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Priority</label>
-                    <select className="w-full h-10 px-3 py-2 border border-input bg-background text-sm rounded-md">
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                      <option value="urgent">Urgent</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Message</label>
-                  <Textarea 
-                    placeholder="Describe your issue in detail..."
-                    className="min-h-32"
-                  />
-                </div>
-
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                  Send Message
+              <div className="text-center py-8">
+                <MessageSquare className="h-16 w-16 mx-auto text-emerald-600 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Start a Live Chat</h3>
+                <p className="text-muted-foreground mb-4">
+                  Connect with our support team for instant assistance
+                </p>
+                <Button 
+                  onClick={() => setIsChatOpen(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Open Chat Window
                 </Button>
-              </form>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="phone">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5" />
+                Phone Support
+              </CardTitle>
+              <CardDescription>Call us for direct assistance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PhoneSupport />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="email">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Email Support
+              </CardTitle>
+              <CardDescription>Send us a detailed message</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EmailSupport />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Live Chat Widget */}
+      <LiveChatWidget 
+        isOpen={isChatOpen} 
+        onToggle={() => setIsChatOpen(!isChatOpen)} 
+      />
     </div>
   );
 };
