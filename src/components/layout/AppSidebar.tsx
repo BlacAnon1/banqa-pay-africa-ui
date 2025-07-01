@@ -53,25 +53,27 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
+              {navigationItems.map((item) => {
+                const isActive = currentPath === item.url;
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <NavLink
+                        to={item.url}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? 'bg-primary/10 text-primary border-l-4 border-primary shadow-sm font-semibold'
+                            ? 'bg-primary text-primary-foreground border-l-4 border-primary-foreground shadow-sm font-semibold'
                             : 'hover:bg-muted hover:text-primary'
-                        }`
-                      }
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {!collapsed && <span className="font-medium">{t(item.title)}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {!collapsed && <span className="font-medium">{t(item.title)}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
