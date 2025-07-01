@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { QuickPayPreference, QuickPayService } from '@/types/quickPay';
-import { QuickPayService as QuickPayServiceClass } from '@/services/quickPayService';
+import { QuickPayServiceClass } from '@/services/quickPayService';
 
 export const useQuickPayPreferences = () => {
   const [preferences, setPreferences] = useState<QuickPayPreference[]>([]);

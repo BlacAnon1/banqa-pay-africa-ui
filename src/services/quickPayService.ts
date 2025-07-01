@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QuickPayPreference, QuickPayService } from '@/types/quickPay';
 import { DEFAULT_SERVICES } from '@/constants/quickPayDefaults';
 
-export class QuickPayService {
+export class QuickPayServiceClass {
   static async fetchPreferences(userId: string): Promise<QuickPayPreference[]> {
     const { data, error } = await supabase
       .from('user_quick_pay_preferences')
