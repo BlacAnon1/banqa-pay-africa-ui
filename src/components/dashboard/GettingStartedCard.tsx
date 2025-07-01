@@ -1,14 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, CreditCard } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface GettingStartedCardProps {
   onAddFunds: () => void;
+  onConnectBank: () => void;
 }
 
-export const GettingStartedCard = ({ onAddFunds }: GettingStartedCardProps) => {
+export const GettingStartedCard = ({ onAddFunds, onConnectBank }: GettingStartedCardProps) => {
   const { t } = useLanguage();
 
   return (
@@ -29,7 +30,12 @@ export const GettingStartedCard = ({ onAddFunds }: GettingStartedCardProps) => {
                 <Plus className="h-4 w-4" />
                 {t('dashboard.loadWallet')}
               </Button>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full gap-2"
+                onClick={onConnectBank}
+              >
+                <CreditCard className="h-4 w-4" />
                 {t('dashboard.connectBank')}
               </Button>
             </div>

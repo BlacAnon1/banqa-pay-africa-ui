@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 import { AddFundsModal } from '@/components/wallet/AddFundsModal';
+import { AddBankAccountModal } from '@/components/wallet/AddBankAccountModal';
 import { CustomizeQuickPayModal } from '@/components/dashboard/CustomizeQuickPayModal';
 import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
 import { StatsCards } from '@/components/dashboard/StatsCards';
@@ -11,6 +12,7 @@ import { GettingStartedCard } from '@/components/dashboard/GettingStartedCard';
 const Dashboard = () => {
   const { wallet, loading } = useRealTimeWallet();
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
+  const [showAddBankModal, setShowAddBankModal] = useState(false);
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
 
   return (
@@ -30,12 +32,20 @@ const Dashboard = () => {
         <QuickPaySection onCustomize={() => setShowCustomizeModal(true)} />
 
         {/* Getting Started */}
-        <GettingStartedCard onAddFunds={() => setShowAddFundsModal(true)} />
+        <GettingStartedCard 
+          onAddFunds={() => setShowAddFundsModal(true)}
+          onConnectBank={() => setShowAddBankModal(true)}
+        />
       </div>
 
       <AddFundsModal 
         open={showAddFundsModal}
         onOpenChange={setShowAddFundsModal}
+      />
+
+      <AddBankAccountModal
+        open={showAddBankModal}
+        onOpenChange={setShowAddBankModal}
       />
 
       <CustomizeQuickPayModal

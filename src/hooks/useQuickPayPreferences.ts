@@ -101,6 +101,17 @@ export const useQuickPayPreferences = () => {
   const addPreference = async (service: QuickPayService) => {
     if (!user?.id) return;
 
+    // Check if service already exists
+    const existingService = preferences.find(p => p.service_name === service.name);
+    if (existingService) {
+      toast({
+        title: "Service Already Added",
+        description: "This service is already in your Quick Pay",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const maxOrder = Math.max(...preferences.map(p => p.display_order), -1);
       
