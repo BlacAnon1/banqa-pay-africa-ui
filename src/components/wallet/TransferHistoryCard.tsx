@@ -1,25 +1,23 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
 
 interface MoneyTransfer {
   id: string;
   sender_id: string;
   recipient_id: string;
-  sender_currency: string;
-  recipient_currency: string;
   amount_sent: number;
   amount_received: number;
+  sender_currency: string;
+  recipient_currency: string;
   exchange_rate: number;
-  transfer_fee: number;
   status: string;
-  reference_number: string;
   description: string;
   created_at: string;
+  processed_at: string;
   sender_profile?: {
     full_name: string;
     email: string;
@@ -51,16 +49,33 @@ export const TransferHistoryCard = () => {
         .from('money_transfers')
         .select(`
           *,
-          sender_profile:profiles!sender_id(full_name, email, banqa_id),
-          recipient_profile:profiles!recipient_id(full_name, email, banqa_id)
+          sender_profile:profiles!money_transfers_sender_id_fkey(full_name, email, banqa_id),
+          recipient_profile:profiles!money_transfers_recipient_id_fkey(full_name, email, banqa_id)
         `)
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (!error && data) {
-        setTransfers(data as MoneyTransfer[]);
+      if (error) {
+        console.error('Error fetching transfers:', error);
+        return;
       }
+
+      // Filter and transform the data to match our interface
+      const validTransfers = data?.filter(transfer => 
+        transfer.sender_profile && 
+        transfer.recipient_profile &&
+        typeof transfer.sender_profile === 'object' &&
+        typeof transfer.recipient_profile === 'object' &&
+        !('error' in transfer.sender_profile) &&
+        !('error' in transfer.recipient_profile)
+      ).map(transfer => ({
+        ...transfer,
+        sender_profile: transfer.sender_profile as { full_name: string; email: string; banqa_id: string },
+        recipient_profile: transfer.recipient_profile as { full_name: string; email: string; banqa_id: string }
+      })) || [];
+
+      setTransfers(validTransfers);
     } catch (error) {
       console.error('Error fetching transfers:', error);
     } finally {
@@ -68,39 +83,15 @@ export const TransferHistoryCard = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'default';
-      case 'failed':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
-  };
-
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Transfer History</CardTitle>
-          <CardDescription>Your recent money transfers</CardDescription>
+          <CardTitle>Recent Transfers</CardTitle>
+          <CardDescription>Your money transfer history</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-          </div>
+          <div className="text-center py-4">Loading transfers...</div>
         </CardContent>
       </Card>
     );
@@ -109,66 +100,48 @@ export const TransferHistoryCard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Transfer History</CardTitle>
-        <CardDescription>Your recent money transfers</CardDescription>
+        <CardTitle>Recent Transfers</CardTitle>
+        <CardDescription>Your money transfer history</CardDescription>
       </CardHeader>
       <CardContent>
         {transfers.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No transfers yet. Start sending money to other Banqa users!
+          <div className="text-center py-4 text-muted-foreground">
+            No transfers yet. Send your first transfer to get started!
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {transfers.map((transfer) => {
-              const isSent = transfer.sender_id === user?.id;
-              const otherUser = isSent ? transfer.recipient_profile : transfer.sender_profile;
+              const isSender = transfer.sender_id === user?.id;
+              const otherParty = isSender ? transfer.recipient_profile : transfer.sender_profile;
               
               return (
-                <div key={transfer.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        isSent ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
-                      }`}>
-                        {isSent ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
-                      </div>
-                      <div>
-                        <p className="font-medium">
-                          {isSent ? 'Sent to' : 'Received from'} {otherUser?.full_name || 'Unknown User'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {otherUser?.banqa_id ? `Banqa ID: ${otherUser.banqa_id}` : 'No Banqa ID available'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${isSent ? 'text-red-600' : 'text-green-600'}`}>
-                        {isSent ? '-' : '+'}
-                        {transfer.sender_currency} {isSent ? transfer.amount_sent : transfer.amount_received}
-                      </p>
-                      {transfer.sender_currency !== transfer.recipient_currency && (
-                        <p className="text-xs text-muted-foreground">
-                          ≈ {transfer.recipient_currency} {transfer.amount_received}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
+                <div key={transfer.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(transfer.status)}
-                      <Badge variant={getStatusColor(transfer.status) as any}>
-                        {transfer.status}
-                      </Badge>
+                      <span className={`text-sm font-medium ${isSender ? 'text-red-600' : 'text-green-600'}`}>
+                        {isSender ? 'Sent to' : 'Received from'}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {otherParty?.full_name} ({otherParty?.banqa_id})
+                      </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(transfer.created_at).toLocaleDateString()}
-                    </p>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(transfer.created_at), { addSuffix: true })}
+                    </div>
+                    {transfer.description && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {transfer.description}
+                      </div>
+                    )}
                   </div>
-                  
-                  {transfer.description && (
-                    <p className="text-sm text-muted-foreground mt-2">{transfer.description}</p>
-                  )}
+                  <div className="text-right">
+                    <div className={`font-medium ${isSender ? 'text-red-600' : 'text-green-600'}`}>
+                      {isSender ? '-' : '+'}₦{transfer.amount_sent.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Status: {transfer.status}
+                    </div>
+                  </div>
                 </div>
               );
             })}
