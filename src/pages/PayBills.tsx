@@ -4,6 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Zap, Droplets, Wifi, Receipt, Trash2, Tv, Smartphone, Gift } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AirtimeForm } from '@/components/bills/AirtimeForm';
+import { DataForm } from '@/components/bills/DataForm';
+import { ElectricityForm } from '@/components/bills/ElectricityForm';
+import { WaterForm } from '@/components/bills/WaterForm';
+import { InternetForm } from '@/components/bills/InternetForm';
+import { TVForm } from '@/components/bills/TVForm';
+import { GiftCardForm } from '@/components/bills/GiftCardForm';
 
 const PayBills = () => {
   const { t } = useLanguage();
@@ -11,8 +17,9 @@ const PayBills = () => {
 
   const services = [
     { id: 'airtime', name: 'Airtime & Data', icon: Smartphone, color: 'bg-green-500', description: 'Mobile airtime & data bundles' },
+    { id: 'data', name: 'Data Bundles', icon: Wifi, color: 'bg-blue-500', description: 'Mobile data packages' },
     { id: 'electricity', name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500', description: 'Power utilities' },
-    { id: 'water', name: t('bills.water'), icon: Droplets, color: 'bg-blue-500', description: 'Water utilities' },
+    { id: 'water', name: t('bills.water'), icon: Droplets, color: 'bg-blue-400', description: 'Water utilities' },
     { id: 'internet', name: t('bills.internet'), icon: Wifi, color: 'bg-purple-500', description: 'Internet & broadband' },
     { id: 'tv', name: t('bills.tv'), icon: Tv, color: 'bg-indigo-500', description: 'TV subscriptions' },
     { id: 'gift_cards', name: 'Gift Cards', icon: Gift, color: 'bg-pink-500', description: 'Digital gift cards' },
@@ -54,31 +61,12 @@ const PayBills = () => {
       ) : (
         <div>
           {selectedService === 'airtime' && <AirtimeForm onBack={handleBack} />}
-          {selectedService === 'electricity' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Electricity bill payment coming soon!</p>
-            </div>
-          )}
-          {selectedService === 'water' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Water bill payment coming soon!</p>
-            </div>
-          )}
-          {selectedService === 'internet' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Internet bill payment coming soon!</p>
-            </div>
-          )}
-          {selectedService === 'tv' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">TV subscription coming soon!</p>
-            </div>
-          )}
-          {selectedService === 'gift_cards' && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Gift cards coming soon!</p>
-            </div>
-          )}
+          {selectedService === 'data' && <DataForm onBack={handleBack} />}
+          {selectedService === 'electricity' && <ElectricityForm onBack={handleBack} />}
+          {selectedService === 'water' && <WaterForm onBack={handleBack} />}
+          {selectedService === 'internet' && <InternetForm onBack={handleBack} />}
+          {selectedService === 'tv' && <TVForm onBack={handleBack} />}
+          {selectedService === 'gift_cards' && <GiftCardForm onBack={handleBack} />}
         </div>
       )}
     </div>

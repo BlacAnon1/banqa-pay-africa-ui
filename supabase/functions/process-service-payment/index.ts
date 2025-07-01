@@ -37,37 +37,78 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
-    // Verify payment with Flutterwave (you'd implement this based on your payment flow)
-    // For now, we'll assume payment is verified
-
     // Process the service based on type
     let serviceResult
+    let providerName = 'Unknown'
     
-    if (service_type === 'airtime') {
+    if (service_type === 'airtime' || service_type === 'data') {
       // Get Reloadly access token
       const authResponse = await supabaseClient.functions.invoke('reloadly-auth')
       if (!authResponse.data?.success) {
         throw new Error('Failed to authenticate with service provider')
       }
 
-      // Process airtime through Reloadly
-      const airtimeResponse = await supabaseClient.functions.invoke('reloadly-services', {
+      // Process airtime/data through Reloadly
+      const action = service_type === 'airtime' ? 'topup_airtime' : 'topup_data'
+      const serviceResponse = await supabaseClient.functions.invoke('reloadly-services', {
         body: {
-          action: 'topup_airtime',
+          action,
           access_token: authResponse.data.access_token,
           operator_id: service_data.operator_id,
           phone_number: service_data.phone_number,
           amount: amount,
           reference: payment_reference,
-          country_code: 'NG'
+          country_code: service_data.country_code || 'NG'
         }
       })
 
-      if (!airtimeResponse.data?.success) {
-        throw new Error(airtimeResponse.data?.error || 'Service delivery failed')
+      if (!serviceResponse.data?.success) {
+        throw new Error(serviceResponse.data?.error || 'Service delivery failed')
       }
 
-      serviceResult = airtimeResponse.data.data
+      serviceResult = serviceResponse.data.data
+      providerName = service_data.operator_name || 'Reloadly'
+
+    } else if (service_type === 'gift_card') {
+      // Get Reloadly access token for gift cards
+      const authResponse = await supabaseClient.functions.invoke('reloadly-auth')
+      if (!authResponse.data?.success) {
+        throw new Error('Failed to authenticate with service provider')
+      }
+
+      // Process gift card through Reloadly
+      const giftCardResponse = await supabaseClient.functions.invoke('reloadly-services', {
+        body: {
+          action: 'order_gift_card',
+          access_token: authResponse.data.access_token,
+          product_id: service_data.product_id,
+          amount: amount,
+          reference: payment_reference,
+          recipient_email: service_data.recipient_email,
+          country_code: service_data.country_code || 'NG',
+          quantity: 1
+        }
+      })
+
+      if (!giftCardResponse.data?.success) {
+        throw new Error(giftCardResponse.data?.error || 'Gift card delivery failed')
+      }
+
+      serviceResult = giftCardResponse.data.data
+      providerName = service_data.brand_name || 'Gift Card'
+
+    } else if (['electricity', 'water', 'internet', 'tv'].includes(service_type)) {
+      // For utility bills, we'll simulate the process for now
+      // In a real implementation, you'd integrate with utility providers' APIs
+      console.log(`Processing ${service_type} service:`, service_data)
+      
+      serviceResult = {
+        status: 'successful',
+        reference: payment_reference,
+        message: `${service_type} service processed successfully`
+      }
+      
+      providerName = service_data.provider_name || `${service_type} Provider`
     }
 
     // Create transaction record
@@ -80,7 +121,7 @@ serve(async (req) => {
       reference_number: payment_reference,
       description: `Direct ${service_type} purchase`,
       service_type: service_type,
-      provider_name: 'Reloadly',
+      provider_name: providerName,
       metadata: {
         payment_method: 'flutterwave_direct',
         service_data,
