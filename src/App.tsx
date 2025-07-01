@@ -26,6 +26,11 @@ import Wallet from "./pages/Wallet";
 import Support from "./pages/Support";
 import NotFound from "./pages/NotFound";
 
+// Legal Pages
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import ContactUs from "./pages/ContactUs";
+
 // Profile and KYC Pages
 import ProfileCompletion from "./components/profile/ProfileCompletion";
 import DocumentUpload from "./components/kyc/DocumentUpload";
@@ -54,6 +59,11 @@ const App = () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/verify-otp" element={<VerifyOTP />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                    
+                    {/* Legal Pages - Public Routes */}
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/contact-us" element={<ContactUs />} />
                     
                     {/* Protected App Routes with AppLayout */}
                     <Route path="/" element={

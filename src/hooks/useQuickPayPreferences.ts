@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -84,11 +85,19 @@ export const useQuickPayPreferences = () => {
       const maxOrder = Math.max(...preferences.map(p => p.display_order), -1);
       const data = await QuickPayServiceClass.addPreference(user.id, service, maxOrder);
       
+      // Update state immediately and then refetch to ensure consistency
       setPreferences(prev => [...prev, data]);
+      
       toast({
         title: "Success",
-        description: `Service added to Quick Pay`
+        description: `${service.name} added to Quick Pay`
       });
+
+      // Refetch to ensure UI is in sync with database
+      setTimeout(() => {
+        fetchPreferences();
+      }, 500);
+      
     } catch (error: any) {
       console.error('Error adding preference:', error);
       
