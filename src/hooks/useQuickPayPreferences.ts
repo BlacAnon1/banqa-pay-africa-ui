@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -11,15 +10,25 @@ export const useQuickPayPreferences = () => {
   const [hasInitialized, setHasInitialized] = useState(false);
   const { user } = useAuth();
 
+  console.log('useQuickPayPreferences hook called, user:', user?.id);
+
   const fetchPreferences = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('No user ID available, skipping fetch');
+      setLoading(false);
+      return;
+    }
+
+    console.log('Fetching preferences for user:', user.id);
 
     try {
       const data = await QuickPayServiceClass.fetchPreferences(user.id);
+      console.log('Fetched preferences:', data);
       setPreferences(data);
       
       // If user has no preferences, initialize with defaults
       if (data.length === 0) {
+        console.log('No preferences found, initializing defaults...');
         await initializeDefaultServices();
       } else {
         setHasInitialized(true);
@@ -37,10 +46,16 @@ export const useQuickPayPreferences = () => {
   };
 
   const initializeDefaultServices = async () => {
-    if (!user?.id || hasInitialized) return;
+    if (!user?.id || hasInitialized) {
+      console.log('Skipping initialization:', { userId: user?.id, hasInitialized });
+      return;
+    }
+
+    console.log('Initializing default services for user:', user.id);
 
     try {
       const data = await QuickPayServiceClass.initializeDefaultServices(user.id);
+      console.log('Initialized default services:', data);
       setPreferences(data);
       setHasInitialized(true);
     } catch (error) {
@@ -141,8 +156,11 @@ export const useQuickPayPreferences = () => {
   };
 
   useEffect(() => {
+    console.log('useQuickPayPreferences useEffect triggered, user.id:', user?.id);
     fetchPreferences();
   }, [user?.id]);
+
+  console.log('useQuickPayPreferences returning:', { preferences: preferences.length, loading });
 
   return {
     preferences,

@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
@@ -31,57 +32,63 @@ import DocumentUpload from "./components/kyc/DocumentUpload";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                {/* Root route */}
-                <Route path="/" element={<Index />} />
-                
-                {/* Auth Routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/verify-otp" element={<VerifyOTP />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                
-                {/* Protected App Routes with AppLayout */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <AppLayout />
-                  </ProtectedRoute>
-                }>
-                  <Route path="dashboard" element={<Dashboard />} />
-                  <Route path="pay-bills" element={<PayBills />} />
-                  <Route path="history" element={<History />} />
-                  <Route path="wallet" element={<Wallet />} />
-                  <Route path="support" element={<Support />} />
-                  <Route path="profile/complete" element={<ProfileCompletion />} />
-                  <Route path="kyc/documents" element={<DocumentUpload />} />
-                </Route>
-                
-                {/* Legacy /app routes for backward compatibility */}
-                <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/app/pay-bills" element={<Navigate to="/pay-bills" replace />} />
-                <Route path="/app/history" element={<Navigate to="/history" replace />} />
-                <Route path="/app/wallet" element={<Navigate to="/wallet" replace />} />
-                <Route path="/app/support" element={<Navigate to="/support" replace />} />
-                <Route path="/app/profile/complete" element={<Navigate to="/profile/complete" replace />} />
-                <Route path="/app/kyc/documents" element={<Navigate to="/kyc/documents" replace />} />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('App component rendering...');
+  
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    {/* Root route */}
+                    <Route path="/" element={<Index />} />
+                    
+                    {/* Auth Routes */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-otp" element={<VerifyOTP />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    
+                    {/* Protected App Routes with AppLayout */}
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <AppLayout />
+                      </ProtectedRoute>
+                    }>
+                      <Route path="dashboard" element={<Dashboard />} />
+                      <Route path="pay-bills" element={<PayBills />} />
+                      <Route path="history" element={<History />} />
+                      <Route path="wallet" element={<Wallet />} />
+                      <Route path="support" element={<Support />} />
+                      <Route path="profile/complete" element={<ProfileCompletion />} />
+                      <Route path="kyc/documents" element={<DocumentUpload />} />
+                    </Route>
+                    
+                    {/* Legacy /app routes for backward compatibility */}
+                    <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/app/pay-bills" element={<Navigate to="/pay-bills" replace />} />
+                    <Route path="/app/history" element={<Navigate to="/history" replace />} />
+                    <Route path="/app/wallet" element={<Navigate to="/wallet" replace />} />
+                    <Route path="/app/support" element={<Navigate to="/support" replace />} />
+                    <Route path="/app/profile/complete" element={<Navigate to="/profile/complete" replace />} />
+                    <Route path="/app/kyc/documents" element={<Navigate to="/kyc/documents" replace />} />
+                    
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;
