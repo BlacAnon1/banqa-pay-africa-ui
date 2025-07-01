@@ -51,8 +51,11 @@ export const useQuickPayPreferences = () => {
   const addPreference = async (service: QuickPayService) => {
     if (!user?.id) return;
 
-    // Check if service already exists
-    const existingService = preferences.find(p => p.service_name === service.name);
+    // Check if service already exists more strictly
+    const existingService = preferences.find(p => 
+      p.service_name === service.name && p.is_active === true
+    );
+    
     if (existingService) {
       toast({
         title: "Service Already Added",
@@ -71,13 +74,25 @@ export const useQuickPayPreferences = () => {
         title: "Success",
         description: `Service added to Quick Pay`
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding preference:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add service to Quick Pay",
-        variant: "destructive"
-      });
+      
+      // Check if it's a duplicate constraint error
+      if (error?.code === '23505') {
+        toast({
+          title: "Service Already Added",
+          description: "This service is already in your Quick Pay",
+          variant: "destructive"
+        });
+        // Refresh preferences to ensure UI is in sync
+        await fetchPreferences();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add service to Quick Pay",
+          variant: "destructive"
+        });
+      }
     }
   };
 
