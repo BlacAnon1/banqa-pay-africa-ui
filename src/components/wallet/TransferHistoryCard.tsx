@@ -66,21 +66,28 @@ export const TransferHistoryCard = () => {
       if (data) {
         for (const transfer of data) {
           // Check if profiles exist and are valid objects (not error objects)
-          const senderValid = transfer.sender_profile && 
-            typeof transfer.sender_profile === 'object' && 
-            'full_name' in transfer.sender_profile &&
-            !('error' in transfer.sender_profile);
+          const senderProfile = transfer.sender_profile;
+          const recipientProfile = transfer.recipient_profile;
           
-          const recipientValid = transfer.recipient_profile && 
-            typeof transfer.recipient_profile === 'object' && 
-            'full_name' in transfer.recipient_profile &&
-            !('error' in transfer.recipient_profile);
+          const senderValid = senderProfile && 
+            typeof senderProfile === 'object' && 
+            'full_name' in senderProfile &&
+            'email' in senderProfile &&
+            'banqa_id' in senderProfile &&
+            !('error' in senderProfile);
+          
+          const recipientValid = recipientProfile && 
+            typeof recipientProfile === 'object' && 
+            'full_name' in recipientProfile &&
+            'email' in recipientProfile &&
+            'banqa_id' in recipientProfile &&
+            !('error' in recipientProfile);
 
           if (senderValid && recipientValid) {
             validTransfers.push({
               ...transfer,
-              sender_profile: transfer.sender_profile as Profile,
-              recipient_profile: transfer.recipient_profile as Profile
+              sender_profile: senderProfile as Profile,
+              recipient_profile: recipientProfile as Profile
             });
           }
         }
