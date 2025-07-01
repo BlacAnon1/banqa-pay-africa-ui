@@ -54,7 +54,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
   const [selectedOperator, setSelectedOperator] = useState<DataOperator | null>(null);
   const [processing, setProcessing] = useState(false);
   
-  const { loading, getOperators, detectOperator, topupAirtime } = useReloadly();
+  const { loading, getOperators, detectOperator, topupData } = useReloadly();
   const { wallet, syncWallet } = useRealTimeWallet();
   const { initializeServicePayment } = useDirectServicePayment();
 
@@ -66,7 +66,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
     try {
       const operatorData = await getOperators('NG');
       // Filter for data operators only
-      const dataOperators = operatorData.filter((op: any) => op.data === true);
+      const dataOperators = operatorData.filter((op: DataOperator) => op.data === true);
       setOperators(dataOperators);
       console.log('Loaded data operators:', dataOperators);
     } catch (error) {
@@ -82,14 +82,15 @@ export const DataForm = ({ onBack }: DataFormProps) => {
   const handlePhoneNumberChange = async (value: string) => {
     setPhoneNumber(value);
     
+    // Auto-detect operator when phone number is complete
     if (value.length >= 10) {
       try {
         const cleanNumber = value.replace(/\D/g, '');
         const detectedOperator = await detectOperator(cleanNumber);
         
         if (detectedOperator) {
-          const operator = operators.find(op => op.name.toLowerCase().includes(detectedOperator.name.toLowerCase()));
-          if (operator) {
+          const operator = operators.find(op => op.operatorId === detectedOperator.operatorId);
+          if (operator && operator.data) {
             setSelectedOperator(operator);
             console.log('Auto-detected data operator:', operator.name);
           }
@@ -104,7 +105,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
     try {
       console.log('Processing data service delivery...');
       
-      await topupAirtime({
+      await topupData({
         operator_id: selectedOperator!.operatorId,
         phone_number: phoneNumber.replace(/\D/g, ''),
         amount: amountNum,
@@ -118,6 +119,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
         duration: 5000,
       });
 
+      // Reset form
       setPhoneNumber('');
       setAmount('');
       setSelectedOperator(null);
@@ -125,6 +127,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
     } catch (error) {
       console.error('Data service delivery failed:', error);
       
+      // If using wallet payment, refund the amount
       if (paymentMethod === 'wallet') {
         console.log('Refunding wallet due to service failure...');
         await syncWallet(amountNum, 'credit', `REFUND_${reference}`, {
@@ -158,6 +161,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
     const reference = `DATA_${Date.now()}`;
     
     try {
+      // Debit wallet first
       const syncResult = await syncWallet(-amountNum, 'debit', reference, {
         service_type: 'data',
         provider: selectedOperator!.name,
@@ -169,6 +173,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
         throw new Error(syncResult.error);
       }
 
+      // Process service delivery
       await processDataService(reference, amountNum);
       
     } catch (error) {
@@ -192,6 +197,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
         }
       });
 
+      // Reset form on successful payment
       setPhoneNumber('');
       setAmount('');
       setSelectedOperator(null);
@@ -216,10 +222,10 @@ export const DataForm = ({ onBack }: DataFormProps) => {
 
     const amountNum = parseFloat(amount);
     
-    if (selectedOperator.fixedAmounts.length > 0 && !selectedOperator.fixedAmounts.includes(amountNum)) {
+    if (amountNum < selectedOperator.minAmount || amountNum > selectedOperator.maxAmount) {
       toast({
         title: "Invalid Amount",
-        description: "Please select from the available data bundles.",
+        description: `Amount must be between ${selectedOperator.destinationCurrencySymbol}${selectedOperator.minAmount} and ${selectedOperator.destinationCurrencySymbol}${selectedOperator.maxAmount}`,
         variant: "destructive",
       });
       return;
@@ -259,7 +265,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
                 <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                   <Wifi className="h-5 w-5 text-white" />
                 </div>
-                Data Bundles
+                Data Bundle
               </CardTitle>
             </div>
           </div>
@@ -267,9 +273,9 @@ export const DataForm = ({ onBack }: DataFormProps) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phoneNumber">Phone Number</Label>
               <Input
-                id="phone"
+                id="phoneNumber"
                 type="tel"
                 placeholder="08012345678"
                 value={phoneNumber}
@@ -280,7 +286,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
 
             {operators.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="operator">Data Provider</Label>
+                <Label htmlFor="operator">Network Provider</Label>
                 <Select 
                   value={selectedOperator?.operatorId.toString() || ''} 
                   onValueChange={(value) => {
@@ -289,12 +295,15 @@ export const DataForm = ({ onBack }: DataFormProps) => {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select data provider" />
+                    <SelectValue placeholder="Select network provider" />
                   </SelectTrigger>
                   <SelectContent>
                     {operators.map((operator) => (
                       <SelectItem key={operator.operatorId} value={operator.operatorId.toString()}>
-                        {operator.name}
+                        <div className="flex items-center justify-between w-full">
+                          <span>{operator.name}</span>
+                          <Badge variant="secondary" className="ml-2">Data</Badge>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -304,33 +313,23 @@ export const DataForm = ({ onBack }: DataFormProps) => {
 
             {selectedOperator && (
               <>
-                {selectedOperator.fixedAmounts.length > 0 ? (
-                  <div className="space-y-2">
-                    <Label>Select Data Bundle</Label>
-                    <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto">
-                      {selectedOperator.fixedAmounts.map((fixedAmount, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            amount === fixedAmount.toString() 
-                              ? 'border-primary bg-primary/10' 
-                              : 'hover:border-primary/50'
-                          }`}
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount ({selectedOperator.destinationCurrencySymbol})</Label>
+                  {selectedOperator.localFixedAmounts.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedOperator.localFixedAmounts.slice(0, 6).map((fixedAmount) => (
+                        <Button
+                          key={fixedAmount}
+                          type="button"
+                          variant={amount === fixedAmount.toString() ? "default" : "outline"}
                           onClick={() => setAmount(fixedAmount.toString())}
+                          className="h-12"
                         >
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{selectedOperator.destinationCurrencySymbol}{fixedAmount}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {selectedOperator.fixedAmountsDescriptions[fixedAmount.toString()] || 'Data Bundle'}
-                            </span>
-                          </div>
-                        </div>
+                          {selectedOperator.destinationCurrencySymbol}{fixedAmount}
+                        </Button>
                       ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="amount">Amount ({selectedOperator.destinationCurrencySymbol})</Label>
+                  ) : (
                     <Input
                       id="amount"
                       type="number"
@@ -342,8 +341,8 @@ export const DataForm = ({ onBack }: DataFormProps) => {
                       step="1"
                       required
                     />
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div className="space-y-3">
                   <Label>Payment Method</Label>
@@ -381,16 +380,16 @@ export const DataForm = ({ onBack }: DataFormProps) => {
                 <h4 className="font-medium mb-2">Transaction Summary</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
+                    <span>Network:</span>
+                    <span>{selectedOperator.name}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span>Phone Number:</span>
                     <span>{phoneNumber}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Provider:</span>
-                    <span>{selectedOperator.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Bundle:</span>
-                    <span>{selectedOperator.fixedAmountsDescriptions[amount] || `${selectedOperator.destinationCurrencySymbol}${amount} Data`}</span>
+                    <span>Amount:</span>
+                    <span>{selectedOperator.destinationCurrencySymbol}{amount}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Payment Method:</span>

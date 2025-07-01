@@ -12,124 +12,168 @@ serve(async (req) => {
   }
 
   try {
-    const { action, access_token, country_code = 'NG', ...params } = await req.json()
-
-    if (!access_token) {
-      throw new Error('Access token required')
+    const { action, ...params } = await req.json()
+    
+    const clientId = Deno.env.get('RELOADLY_CLIENT_ID')
+    const clientSecret = Deno.env.get('RELOADLY_CLIENT_SECRET')
+    
+    if (!clientId || !clientSecret) {
+      throw new Error('Reloadly credentials not configured')
     }
 
-    console.log('Reloadly services request:', { action, country_code, params })
-
-    let apiUrl = ''
-    let requestOptions: RequestInit = {
+    // Get access token
+    const tokenResponse = await fetch('https://auth.reloadly.com/oauth/token', {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${access_token}`,
         'Content-Type': 'application/json',
-      }
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'client_credentials',
+        audience: 'https://topups.reloadly.com'
+      })
+    })
+
+    if (!tokenResponse.ok) {
+      throw new Error('Failed to get Reloadly access token')
     }
+
+    const tokenData = await tokenResponse.json()
+    const accessToken = tokenData.access_token
+
+    let result = {}
 
     switch (action) {
       case 'get_operators':
-        // Get airtime operators for country
-        apiUrl = `https://topups.reloadly.com/operators/countries/${country_code}`
-        requestOptions.method = 'GET'
+        const operatorsResponse = await fetch(`https://topups.reloadly.com/operators/countries/${params.country_code}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (!operatorsResponse.ok) {
+          throw new Error('Failed to fetch operators')
+        }
+        
+        const operators = await operatorsResponse.json()
+        result = { operators }
         break
 
-      case 'get_data_operators':
-        // Get data operators for country
-        apiUrl = `https://topups.reloadly.com/operators/countries/${country_code}?includeData=true`
-        requestOptions.method = 'GET'
-        break
-
-      case 'get_operator_by_phone':
-        // Auto-detect operator by phone number
-        apiUrl = `https://topups.reloadly.com/operators/auto-detect/phone/${params.phone_number}/countries/${country_code}`
-        requestOptions.method = 'GET'
+      case 'detect_operator':
+        const detectResponse = await fetch(`https://topups.reloadly.com/operators/auto-detect/phone/${params.phone_number}/countries/NG`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (!detectResponse.ok) {
+          throw new Error('Failed to detect operator')
+        }
+        
+        const operator = await detectResponse.json()
+        result = { operator }
         break
 
       case 'topup_airtime':
-        // Send airtime topup
-        apiUrl = 'https://topups.reloadly.com/topups'
-        requestOptions.method = 'POST'
-        requestOptions.body = JSON.stringify({
-          operatorId: params.operator_id,
-          amount: params.amount,
-          useLocalAmount: false,
-          customIdentifier: params.reference,
-          recipientPhone: {
-            countryCode: params.country_code || 'NG',
-            number: params.phone_number
-          }
+        const airtimeResponse = await fetch('https://topups.reloadly.com/topups', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            operatorId: params.operator_id,
+            amount: params.amount,
+            useLocalAmount: true,
+            customIdentifier: params.reference,
+            recipientPhone: {
+              countryCode: params.country_code,
+              number: params.phone_number
+            }
+          })
         })
+        
+        if (!airtimeResponse.ok) {
+          const errorData = await airtimeResponse.json()
+          throw new Error(`Airtime topup failed: ${errorData.message || 'Unknown error'}`)
+        }
+        
+        result = await airtimeResponse.json()
         break
 
       case 'topup_data':
-        // Send data bundle
-        apiUrl = 'https://topups.reloadly.com/topups'
-        requestOptions.method = 'POST'
-        requestOptions.body = JSON.stringify({
-          operatorId: params.operator_id,
-          amount: params.amount,
-          useLocalAmount: false,
-          customIdentifier: params.reference,
-          recipientPhone: {
-            countryCode: params.country_code || 'NG',
-            number: params.phone_number
-          }
+        // For data bundles, we use the same endpoint but with data-specific operators
+        const dataResponse = await fetch('https://topups.reloadly.com/topups', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            operatorId: params.operator_id,
+            amount: params.amount,
+            useLocalAmount: true,
+            customIdentifier: params.reference,
+            recipientPhone: {
+              countryCode: params.country_code,
+              number: params.phone_number
+            }
+          })
         })
+        
+        if (!dataResponse.ok) {
+          const errorData = await dataResponse.json()
+          throw new Error(`Data bundle failed: ${errorData.message || 'Unknown error'}`)
+        }
+        
+        result = await dataResponse.json()
         break
 
       case 'get_gift_card_products':
-        // Get gift card products for country
-        apiUrl = `https://giftcards.reloadly.com/products?countryCode=${country_code}&page=1&size=200`
-        requestOptions.method = 'GET'
-        requestOptions.headers = {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
-        }
-        break
-
-      case 'order_gift_card':
-        // Order a gift card
-        apiUrl = 'https://giftcards.reloadly.com/orders'
-        requestOptions.method = 'POST'
-        requestOptions.body = JSON.stringify({
-          productId: params.product_id,
-          countryCode: params.country_code || 'NG',
-          quantity: params.quantity || 1,
-          unitPrice: params.amount,
-          customIdentifier: params.reference,
-          recipientEmail: params.recipient_email
+        // Get gift card access token (different audience)
+        const giftTokenResponse = await fetch('https://auth.reloadly.com/oauth/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            grant_type: 'client_credentials',
+            audience: 'https://giftcards.reloadly.com'
+          })
         })
-        requestOptions.headers = {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json',
+
+        if (!giftTokenResponse.ok) {
+          throw new Error('Failed to get gift card access token')
         }
+
+        const giftTokenData = await giftTokenResponse.json()
+        const giftAccessToken = giftTokenData.access_token
+
+        const productsResponse = await fetch(`https://giftcards.reloadly.com/products?countryCode=${params.country_code}&size=100`, {
+          headers: {
+            'Authorization': `Bearer ${giftAccessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (!productsResponse.ok) {
+          throw new Error('Failed to fetch gift card products')
+        }
+        
+        result = await productsResponse.json()
         break
 
       default:
         throw new Error(`Unknown action: ${action}`)
     }
 
-    console.log('Making Reloadly API request to:', apiUrl)
-
-    const response = await fetch(apiUrl, requestOptions)
-    const responseText = await response.text()
-
-    console.log('Reloadly API response status:', response.status)
-    console.log('Reloadly API response:', responseText)
-
-    if (!response.ok) {
-      throw new Error(`Reloadly API error: ${response.status} - ${responseText}`)
-    }
-
-    const data = JSON.parse(responseText)
-
     return new Response(
-      JSON.stringify({
-        success: true,
-        data
-      }),
+      JSON.stringify(result),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -137,12 +181,9 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Reloadly services error:', error)
+    console.error('Reloadly service error:', error)
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

@@ -15,156 +15,50 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { 
-      amount, 
-      service_type, 
-      service_data, 
-      payment_reference,
-      user_id 
-    } = await req.json()
+    const { reference, service_type, service_data } = await req.json()
 
-    console.log('Processing service payment:', { 
-      amount, 
-      service_type, 
-      payment_reference, 
-      user_id 
-    })
+    console.log('Processing service delivery:', { reference, service_type, service_data })
 
-    if (!amount || !service_type || !payment_reference || !user_id) {
-      throw new Error('Missing required fields')
-    }
+    let result = {}
 
-    // Process the service based on type
-    let serviceResult
-    let providerName = 'Unknown'
-    
-    if (service_type === 'airtime' || service_type === 'data') {
-      // Get Reloadly access token
-      const authResponse = await supabaseClient.functions.invoke('reloadly-auth')
-      if (!authResponse.data?.success) {
-        throw new Error('Failed to authenticate with service provider')
-      }
-
-      // Process airtime/data through Reloadly
-      const action = service_type === 'airtime' ? 'topup_airtime' : 'topup_data'
-      const serviceResponse = await supabaseClient.functions.invoke('reloadly-services', {
-        body: {
-          action,
-          access_token: authResponse.data.access_token,
-          operator_id: service_data.operator_id,
-          phone_number: service_data.phone_number,
-          amount: amount,
-          reference: payment_reference,
-          country_code: service_data.country_code || 'NG'
-        }
-      })
-
-      if (!serviceResponse.data?.success) {
-        throw new Error(serviceResponse.data?.error || 'Service delivery failed')
-      }
-
-      serviceResult = serviceResponse.data.data
-      providerName = service_data.operator_name || 'Reloadly'
-
-    } else if (service_type === 'gift_card') {
-      // Get Reloadly access token for gift cards
-      const authResponse = await supabaseClient.functions.invoke('reloadly-auth')
-      if (!authResponse.data?.success) {
-        throw new Error('Failed to authenticate with service provider')
-      }
-
-      // Process gift card through Reloadly
-      const giftCardResponse = await supabaseClient.functions.invoke('reloadly-services', {
-        body: {
-          action: 'order_gift_card',
-          access_token: authResponse.data.access_token,
-          product_id: service_data.product_id,
-          amount: amount,
-          reference: payment_reference,
-          recipient_email: service_data.recipient_email,
-          country_code: service_data.country_code || 'NG',
-          quantity: 1
-        }
-      })
-
-      if (!giftCardResponse.data?.success) {
-        throw new Error(giftCardResponse.data?.error || 'Gift card delivery failed')
-      }
-
-      serviceResult = giftCardResponse.data.data
-      providerName = service_data.brand_name || 'Gift Card'
-
-    } else if (['electricity', 'water', 'internet', 'tv'].includes(service_type)) {
-      // For utility bills, we'll simulate the process for now
-      // In a real implementation, you'd integrate with utility providers' APIs
-      console.log(`Processing ${service_type} service:`, service_data)
+    switch (service_type) {
+      case 'airtime':
+        result = await processAirtimeService(supabaseClient, reference, service_data)
+        break
       
-      serviceResult = {
-        status: 'successful',
-        reference: payment_reference,
-        message: `${service_type} service processed successfully`
-      }
+      case 'data':
+        result = await processDataService(supabaseClient, reference, service_data)
+        break
       
-      providerName = service_data.provider_name || `${service_type} Provider`
-    }
-
-    // Create transaction record
-    const transactionData = {
-      user_id,
-      transaction_type: 'purchase',
-      amount: amount,
-      status: 'completed',
-      currency: 'NGN',
-      reference_number: payment_reference,
-      description: `Direct ${service_type} purchase`,
-      service_type: service_type,
-      provider_name: providerName,
-      metadata: {
-        payment_method: 'flutterwave_direct',
-        service_data,
-        service_result: serviceResult
-      }
-    }
-
-    const { data: transaction, error: transactionError } = await supabaseClient
-      .from('transactions')
-      .insert(transactionData)
-      .select()
-      .single()
-
-    if (transactionError) {
-      console.error('Failed to create transaction record:', transactionError)
-    }
-
-    // Send notification
-    try {
-      await supabaseClient
-        .from('notifications')
-        .insert({
-          user_id,
-          title: `${service_type.charAt(0).toUpperCase() + service_type.slice(1)} Purchase Successful`,
-          body: `Your ${service_type} purchase of ₦${amount} has been completed successfully.`,
-          type: 'transaction',
-          metadata: {
-            transaction_id: transaction?.id,
-            service_type,
-            amount
-          }
-        })
-    } catch (notificationError) {
-      console.error('Failed to send notification:', notificationError)
+      case 'electricity':
+        result = await processElectricityService(supabaseClient, reference, service_data)
+        break
+      
+      case 'water':
+        result = await processWaterService(supabaseClient, reference, service_data)
+        break
+      
+      case 'internet':
+        result = await processInternetService(supabaseClient, reference, service_data)
+        break
+      
+      case 'tv':
+        result = await processTVService(supabaseClient, reference, service_data)
+        break
+      
+      case 'gift_card':
+        result = await processGiftCardService(supabaseClient, reference, service_data)
+        break
+      
+      default:
+        throw new Error(`Unsupported service type: ${service_type}`)
     }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        transaction_id: transaction?.id,
-        service_result: serviceResult,
-        message: 'Service delivered successfully'
-      }),
+      JSON.stringify({ success: true, result }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -172,12 +66,9 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Service payment processing error:', error)
+    console.error('Service processing error:', error)
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message 
-      }),
+      JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -185,3 +76,218 @@ serve(async (req) => {
     )
   }
 })
+
+async function processAirtimeService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing airtime service with Reloadly...')
+  
+  // Call Reloadly API for airtime
+  const reloadlyResult = await callReloadlyService({
+    action: 'topup_airtime',
+    operator_id: serviceData.operator_id,
+    phone_number: serviceData.phone_number,
+    amount: serviceData.amount || 1000, // Default amount if not provided
+    reference,
+    country_code: serviceData.country_code || 'NG'
+  })
+  
+  return reloadlyResult
+}
+
+async function processDataService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing data service with Reloadly...')
+  
+  // Call Reloadly API for data
+  const reloadlyResult = await callReloadlyService({
+    action: 'topup_data',
+    operator_id: serviceData.operator_id,
+    phone_number: serviceData.phone_number,
+    amount: serviceData.amount || 1000, // Default amount if not provided
+    reference,
+    country_code: serviceData.country_code || 'NG'
+  })
+  
+  return reloadlyResult
+}
+
+async function processElectricityService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing electricity service...')
+  
+  // In a real implementation, you would integrate with electricity providers' APIs
+  // For now, we'll simulate the process
+  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+  
+  return {
+    success: true,
+    message: `Electricity bill payment of ₦${serviceData.amount || 5000} processed for meter ${serviceData.meter_number}`,
+    provider: serviceData.provider_name,
+    reference
+  }
+}
+
+async function processWaterService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing water service...')
+  
+  // In a real implementation, you would integrate with water providers' APIs
+  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+  
+  return {
+    success: true,
+    message: `Water bill payment of ₦${serviceData.amount || 3000} processed for account ${serviceData.account_number}`,
+    provider: serviceData.provider_name,
+    reference
+  }
+}
+
+async function processInternetService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing internet service...')
+  
+  // In a real implementation, you would integrate with ISP APIs
+  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+  
+  return {
+    success: true,
+    message: `Internet subscription activated for device ${serviceData.device_id}`,
+    provider: serviceData.provider_name,
+    plan: serviceData.plan,
+    reference
+  }
+}
+
+async function processTVService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing TV service...')
+  
+  // In a real implementation, you would integrate with TV providers' APIs
+  await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate API call
+  
+  return {
+    success: true,
+    message: `TV subscription activated for smart card ${serviceData.smart_card_number}`,
+    provider: serviceData.provider_name,
+    package: serviceData.package,
+    reference
+  }
+}
+
+async function processGiftCardService(supabase: any, reference: string, serviceData: any) {
+  console.log('Processing gift card service with Reloadly...')
+  
+  // Call Reloadly Gift Card API
+  const reloadlyResult = await callReloadlyGiftCardService({
+    product_id: serviceData.product_id,
+    recipient_email: serviceData.recipient_email,
+    amount: serviceData.amount,
+    reference,
+    country_code: serviceData.country_code || 'NG'
+  })
+  
+  return reloadlyResult
+}
+
+async function callReloadlyService(params: any) {
+  const clientId = Deno.env.get('RELOADLY_CLIENT_ID')
+  const clientSecret = Deno.env.get('RELOADLY_CLIENT_SECRET')
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Reloadly credentials not configured')
+  }
+
+  // Get access token
+  const tokenResponse = await fetch('https://auth.reloadly.com/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
+      audience: 'https://topups.reloadly.com'
+    })
+  })
+
+  if (!tokenResponse.ok) {
+    throw new Error('Failed to get Reloadly access token')
+  }
+
+  const tokenData = await tokenResponse.json()
+  const accessToken = tokenData.access_token
+
+  // Make the actual topup request
+  const topupResponse = await fetch('https://topups.reloadly.com/topups', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      operatorId: params.operator_id,
+      amount: params.amount,
+      useLocalAmount: true,
+      customIdentifier: params.reference,
+      recipientPhone: {
+        countryCode: params.country_code,
+        number: params.phone_number
+      }
+    })
+  })
+  
+  if (!topupResponse.ok) {
+    const errorData = await topupResponse.json()
+    throw new Error(`Service delivery failed: ${errorData.message || 'Unknown error'}`)
+  }
+  
+  return await topupResponse.json()
+}
+
+async function callReloadlyGiftCardService(params: any) {
+  const clientId = Deno.env.get('RELOADLY_CLIENT_ID')
+  const clientSecret = Deno.env.get('RELOADLY_CLIENT_SECRET')
+  
+  if (!clientId || !clientSecret) {
+    throw new Error('Reloadly credentials not configured')
+  }
+
+  // Get gift card access token
+  const tokenResponse = await fetch('https://auth.reloadly.com/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
+      audience: 'https://giftcards.reloadly.com'
+    })
+  })
+
+  if (!tokenResponse.ok) {
+    throw new Error('Failed to get gift card access token')
+  }
+
+  const tokenData = await tokenResponse.json()
+  const accessToken = tokenData.access_token
+
+  // Order gift card
+  const orderResponse = await fetch('https://giftcards.reloadly.com/orders', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      productId: params.product_id,
+      unitPrice: params.amount,
+      quantity: 1,
+      customIdentifier: params.reference,
+      recipientEmail: params.recipient_email
+    })
+  })
+  
+  if (!orderResponse.ok) {
+    const errorData = await orderResponse.json()
+    throw new Error(`Gift card order failed: ${errorData.message || 'Unknown error'}`)
+  }
+  
+  return await orderResponse.json()
+}

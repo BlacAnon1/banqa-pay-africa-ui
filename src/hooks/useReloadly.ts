@@ -5,84 +5,41 @@ import { toast } from '@/hooks/use-toast';
 
 export const useReloadly = () => {
   const [loading, setLoading] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const getAccessToken = async () => {
-    if (accessToken) return accessToken;
-
+  const getOperators = async (countryCode: string) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log('Getting Reloadly access token...');
-
-      const { data, error } = await supabase.functions.invoke('reloadly-auth');
-
-      if (error) {
-        console.error('Auth error:', error);
-        throw error;
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Authentication failed');
-      }
-
-      setAccessToken(data.access_token);
-      console.log('Reloadly access token obtained');
-      return data.access_token;
-    } catch (error) {
-      console.error('Failed to get access token:', error);
-      toast({
-        title: "Service Error",
-        description: "Failed to connect to service provider. Please try again.",
-        variant: "destructive",
+      const { data, error } = await supabase.functions.invoke('reloadly-services', {
+        body: {
+          action: 'get_operators',
+          country_code: countryCode
+        }
       });
+
+      if (error) throw error;
+      return data.operators || [];
+    } catch (error) {
+      console.error('Error fetching operators:', error);
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  const getOperators = async (countryCode = 'NG') => {
+  const detectOperator = async (phoneNumber: string) => {
     try {
-      const token = await getAccessToken();
-      
       const { data, error } = await supabase.functions.invoke('reloadly-services', {
         body: {
-          action: 'get_operators',
-          access_token: token,
-          country_code: countryCode
+          action: 'detect_operator',
+          phone_number: phoneNumber
         }
       });
 
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      return data.data;
+      return data.operator;
     } catch (error) {
-      console.error('Failed to get operators:', error);
+      console.error('Error detecting operator:', error);
       throw error;
-    }
-  };
-
-  const detectOperator = async (phoneNumber: string, countryCode = 'NG') => {
-    try {
-      const token = await getAccessToken();
-      
-      const { data, error } = await supabase.functions.invoke('reloadly-services', {
-        body: {
-          action: 'get_operator_by_phone',
-          access_token: token,
-          phone_number: phoneNumber,
-          country_code: countryCode
-        }
-      });
-
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      return data.data;
-    } catch (error) {
-      console.error('Failed to detect operator:', error);
-      return null;
     }
   };
 
@@ -91,48 +48,64 @@ export const useReloadly = () => {
     phone_number: string;
     amount: number;
     reference: string;
-    country_code?: string;
+    country_code: string;
   }) => {
     try {
-      const token = await getAccessToken();
-      
       const { data, error } = await supabase.functions.invoke('reloadly-services', {
         body: {
           action: 'topup_airtime',
-          access_token: token,
           ...params
         }
       });
 
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      return data.data;
+      return data;
     } catch (error) {
-      console.error('Failed to send airtime:', error);
+      console.error('Error processing airtime topup:', error);
       throw error;
     }
   };
 
-  const getGiftCardProducts = async (countryCode = 'NG') => {
+  const topupData = async (params: {
+    operator_id: number;
+    phone_number: string;
+    amount: number;
+    reference: string;
+    country_code: string;
+  }) => {
     try {
-      const token = await getAccessToken();
-      
+      const { data, error } = await supabase.functions.invoke('reloadly-services', {
+        body: {
+          action: 'topup_data',
+          ...params
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error processing data topup:', error);
+      throw error;
+    }
+  };
+
+  const getGiftCardProducts = async (countryCode: string) => {
+    setLoading(true);
+    try {
       const { data, error } = await supabase.functions.invoke('reloadly-services', {
         body: {
           action: 'get_gift_card_products',
-          access_token: token,
           country_code: countryCode
         }
       });
 
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      return data.data;
+      return data;
     } catch (error) {
-      console.error('Failed to get gift card products:', error);
+      console.error('Error fetching gift card products:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -141,6 +114,7 @@ export const useReloadly = () => {
     getOperators,
     detectOperator,
     topupAirtime,
+    topupData,
     getGiftCardProducts
   };
 };
