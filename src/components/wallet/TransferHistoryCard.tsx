@@ -1,10 +1,34 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Define the raw Supabase response type
+interface SupabaseTransferResponse {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  sender_currency: string;
+  recipient_currency: string;
+  amount_sent: number;
+  amount_received: number;
+  exchange_rate: number;
+  transfer_fee: number;
+  status: string;
+  reference_number: string;
+  description: string;
+  created_at: string;
+  sender_profile: {
+    full_name: string;
+    email: string;
+  } | null;
+  recipient_profile: {
+    full_name: string;
+    email: string;
+  } | null;
+}
 
 interface MoneyTransfer {
   id: string;
@@ -57,7 +81,24 @@ export const TransferHistoryCard = () => {
         .limit(10);
 
       if (!error && data) {
-        setTransfers(data);
+        // Filter and transform the data to handle potential query errors
+        const validTransfers = data
+          .filter((transfer): transfer is SupabaseTransferResponse => {
+            // Check if the profiles are valid objects or null (not query errors)
+            const senderProfileValid = transfer.sender_profile === null || 
+              (typeof transfer.sender_profile === 'object' && 'full_name' in transfer.sender_profile);
+            const recipientProfileValid = transfer.recipient_profile === null || 
+              (typeof transfer.recipient_profile === 'object' && 'full_name' in transfer.recipient_profile);
+            
+            return senderProfileValid && recipientProfileValid;
+          })
+          .map((transfer): MoneyTransfer => ({
+            ...transfer,
+            sender_profile: transfer.sender_profile,
+            recipient_profile: transfer.recipient_profile
+          }));
+
+        setTransfers(validTransfers);
       }
     } catch (error) {
       console.error('Error fetching transfers:', error);
