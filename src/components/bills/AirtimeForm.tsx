@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Smartphone, ArrowLeft } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Smartphone, ArrowLeft, CreditCard, Wallet } from 'lucide-react';
 import { useReloadly } from '@/hooks/useReloadly';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
+import { useDirectServicePayment } from '@/hooks/useDirectServicePayment';
 import { toast } from '@/hooks/use-toast';
 
 interface AirtimeFormProps {
@@ -47,12 +48,14 @@ interface Operator {
 export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('wallet');
   const [operators, setOperators] = useState<Operator[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [processing, setProcessing] = useState(false);
   
   const { loading, getOperators, detectOperator, topupAirtime } = useReloadly();
   const { wallet, syncWallet } = useRealTimeWallet();
+  const { initializeServicePayment } = useDirectServicePayment();
 
   useEffect(() => {
     loadOperators();
@@ -95,6 +98,113 @@ export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
     }
   };
 
+  const processAirtimeService = async (reference: string, amountNum: number) => {
+    try {
+      console.log('Processing airtime service delivery...');
+      
+      await topupAirtime({
+        operator_id: selectedOperator!.operatorId,
+        phone_number: phoneNumber.replace(/\D/g, ''),
+        amount: amountNum,
+        reference,
+        country_code: 'NG'
+      });
+
+      toast({
+        title: "Airtime Sent Successfully!",
+        description: `₦${amountNum.toLocaleString()} airtime sent to ${phoneNumber}`,
+        duration: 5000,
+      });
+
+      // Reset form
+      setPhoneNumber('');
+      setAmount('');
+      setSelectedOperator(null);
+      
+    } catch (error) {
+      console.error('Airtime service delivery failed:', error);
+      
+      // If using wallet payment, refund the amount
+      if (paymentMethod === 'wallet') {
+        console.log('Refunding wallet due to service failure...');
+        await syncWallet(amountNum, 'credit', `REFUND_${reference}`, {
+          service_type: 'airtime_refund',
+          original_reference: reference,
+          reason: 'Service delivery failed'
+        });
+        
+        toast({
+          title: "Service Failed - Refund Processed",
+          description: `₦${amountNum.toLocaleString()} has been refunded to your wallet due to service failure.`,
+          variant: "destructive",
+          duration: 7000,
+        });
+      }
+      
+      throw error;
+    }
+  };
+
+  const handleWalletPayment = async (amountNum: number) => {
+    if (!wallet || wallet.balance < amountNum) {
+      toast({
+        title: "Insufficient Balance",
+        description: "You don't have enough balance in your wallet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const reference = `AIRTIME_${Date.now()}`;
+    
+    try {
+      // Debit wallet first
+      const syncResult = await syncWallet(-amountNum, 'debit', reference, {
+        service_type: 'airtime',
+        provider: selectedOperator!.name,
+        phone_number: phoneNumber,
+        operator_id: selectedOperator!.operatorId
+      });
+
+      if (syncResult.error) {
+        throw new Error(syncResult.error);
+      }
+
+      // Process service delivery
+      await processAirtimeService(reference, amountNum);
+      
+    } catch (error) {
+      console.error('Wallet payment failed:', error);
+      throw error;
+    }
+  };
+
+  const handleDirectPayment = async (amountNum: number) => {
+    try {
+      console.log('Initializing direct payment for airtime...');
+      
+      await initializeServicePayment({
+        service_type: 'airtime',
+        amount: amountNum,
+        service_data: {
+          operator_id: selectedOperator!.operatorId,
+          operator_name: selectedOperator!.name,
+          phone_number: phoneNumber.replace(/\D/g, ''),
+          country_code: 'NG'
+        }
+      });
+
+      // Reset form on successful payment
+      setPhoneNumber('');
+      setAmount('');
+      setSelectedOperator(null);
+      
+    } catch (error) {
+      console.error('Direct payment failed:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -118,57 +228,19 @@ export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
       return;
     }
 
-    if (!wallet || wallet.balance < amountNum) {
-      toast({
-        title: "Insufficient Balance",
-        description: "You don't have enough balance in your wallet.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setProcessing(true);
 
     try {
-      const reference = `AIRTIME_${Date.now()}`;
-      
-      // Debit wallet first
-      const syncResult = await syncWallet(-amountNum, 'debit', reference, {
-        service_type: 'airtime',
-        provider: selectedOperator.name,
-        phone_number: phoneNumber,
-        operator_id: selectedOperator.operatorId
-      });
-
-      if (syncResult.error) {
-        throw new Error(syncResult.error);
+      if (paymentMethod === 'wallet') {
+        await handleWalletPayment(amountNum);
+      } else {
+        await handleDirectPayment(amountNum);
       }
-
-      // Send airtime
-      await topupAirtime({
-        operator_id: selectedOperator.operatorId,
-        phone_number: phoneNumber.replace(/\D/g, ''),
-        amount: amountNum,
-        reference,
-        country_code: 'NG'
-      });
-
-      toast({
-        title: "Airtime Sent Successfully!",
-        description: `₦${amountNum.toLocaleString()} airtime sent to ${phoneNumber}`,
-        duration: 5000,
-      });
-
-      // Reset form
-      setPhoneNumber('');
-      setAmount('');
-      setSelectedOperator(null);
-      
     } catch (error) {
-      console.error('Airtime purchase failed:', error);
+      console.error('Transaction failed:', error);
       toast({
         title: "Transaction Failed",
-        description: error instanceof Error ? error.message : "Failed to send airtime. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to process transaction. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -238,39 +310,65 @@ export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
             )}
 
             {selectedOperator && (
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount ({selectedOperator.destinationCurrencySymbol})</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder={`Min: ${selectedOperator.minAmount}, Max: ${selectedOperator.maxAmount}`}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min={selectedOperator.minAmount}
-                  max={selectedOperator.maxAmount}
-                  step="1"
-                  required
-                />
-                <div className="text-sm text-muted-foreground">
-                  Range: {selectedOperator.destinationCurrencySymbol}{selectedOperator.minAmount} - {selectedOperator.destinationCurrencySymbol}{selectedOperator.maxAmount}
-                </div>
-                
-                {selectedOperator.fixedAmounts.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <span className="text-sm font-medium">Quick amounts:</span>
-                    {selectedOperator.fixedAmounts.slice(0, 6).map((fixedAmount) => (
-                      <Badge
-                        key={fixedAmount}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => setAmount(fixedAmount.toString())}
-                      >
-                        {selectedOperator.destinationCurrencySymbol}{fixedAmount}
-                      </Badge>
-                    ))}
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount ({selectedOperator.destinationCurrencySymbol})</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    placeholder={`Min: ${selectedOperator.minAmount}, Max: ${selectedOperator.maxAmount}`}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    min={selectedOperator.minAmount}
+                    max={selectedOperator.maxAmount}
+                    step="1"
+                    required
+                  />
+                  <div className="text-sm text-muted-foreground">
+                    Range: {selectedOperator.destinationCurrencySymbol}{selectedOperator.minAmount} - {selectedOperator.destinationCurrencySymbol}{selectedOperator.maxAmount}
                   </div>
-                )}
-              </div>
+                  
+                  {selectedOperator.fixedAmounts.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <span className="text-sm font-medium">Quick amounts:</span>
+                      {selectedOperator.fixedAmounts.slice(0, 6).map((fixedAmount) => (
+                        <Badge
+                          key={fixedAmount}
+                          variant="outline"
+                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                          onClick={() => setAmount(fixedAmount.toString())}
+                        >
+                          {selectedOperator.destinationCurrencySymbol}{fixedAmount}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <Label>Payment Method</Label>
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={setPaymentMethod}
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                      <RadioGroupItem value="wallet" id="wallet" />
+                      <Label htmlFor="wallet" className="flex items-center gap-2 cursor-pointer">
+                        <Wallet className="h-4 w-4" />
+                        Wallet Balance
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                      <RadioGroupItem value="direct" id="direct" />
+                      <Label htmlFor="direct" className="flex items-center gap-2 cursor-pointer">
+                        <CreditCard className="h-4 w-4" />
+                        Card/Transfer
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </>
             )}
 
             {phoneNumber && amount && selectedOperator && (
@@ -289,14 +387,20 @@ export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
                     <span>Amount:</span>
                     <span>{selectedOperator.destinationCurrencySymbol}{amount}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span>Payment Method:</span>
+                    <span>{paymentMethod === 'wallet' ? 'Wallet Balance' : 'Card/Transfer'}</span>
+                  </div>
                   <div className="flex justify-between font-medium">
                     <span>Total Cost:</span>
                     <span>₦{amount}</span>
                   </div>
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Wallet Balance:</span>
-                    <span>₦{wallet?.balance?.toLocaleString() || '0.00'}</span>
-                  </div>
+                  {paymentMethod === 'wallet' && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Wallet Balance:</span>
+                      <span>₦{wallet?.balance?.toLocaleString() || '0.00'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -306,7 +410,7 @@ export const AirtimeForm = ({ onBack }: AirtimeFormProps) => {
               className="w-full bg-green-600 hover:bg-green-700"
               disabled={processing || loading || !selectedOperator || !phoneNumber || !amount}
             >
-              {processing ? 'Processing...' : 'Send Airtime'}
+              {processing ? 'Processing...' : paymentMethod === 'wallet' ? 'Pay from Wallet' : 'Pay with Card/Transfer'}
             </Button>
           </form>
         </CardContent>
