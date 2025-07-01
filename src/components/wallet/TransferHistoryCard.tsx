@@ -5,6 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 
+interface Profile {
+  full_name: string;
+  email: string;
+  banqa_id: string;
+}
+
 interface MoneyTransfer {
   id: string;
   sender_id: string;
@@ -18,16 +24,8 @@ interface MoneyTransfer {
   description: string;
   created_at: string;
   processed_at: string;
-  sender_profile?: {
-    full_name: string;
-    email: string;
-    banqa_id: string;
-  } | null;
-  recipient_profile?: {
-    full_name: string;
-    email: string;
-    banqa_id: string;
-  } | null;
+  sender_profile?: Profile | null;
+  recipient_profile?: Profile | null;
 }
 
 export const TransferHistoryCard = () => {
@@ -58,26 +56,28 @@ export const TransferHistoryCard = () => {
 
       if (error) {
         console.error('Error fetching transfers:', error);
+        setTransfers([]);
         return;
       }
 
-      // Filter and transform the data to match our interface
-      const validTransfers = data?.filter(transfer => 
-        transfer.sender_profile && 
-        transfer.recipient_profile &&
-        typeof transfer.sender_profile === 'object' &&
-        typeof transfer.recipient_profile === 'object' &&
-        !('error' in transfer.sender_profile) &&
-        !('error' in transfer.recipient_profile)
-      ).map(transfer => ({
-        ...transfer,
-        sender_profile: transfer.sender_profile as { full_name: string; email: string; banqa_id: string },
-        recipient_profile: transfer.recipient_profile as { full_name: string; email: string; banqa_id: string }
-      })) || [];
+      // Filter and validate the data
+      const validTransfers = (data || []).filter(transfer => {
+        // Check if profiles exist and are valid objects (not error objects)
+        const senderValid = transfer.sender_profile && 
+          typeof transfer.sender_profile === 'object' && 
+          'full_name' in transfer.sender_profile;
+        
+        const recipientValid = transfer.recipient_profile && 
+          typeof transfer.recipient_profile === 'object' && 
+          'full_name' in transfer.recipient_profile;
+
+        return senderValid && recipientValid;
+      }) as MoneyTransfer[];
 
       setTransfers(validTransfers);
     } catch (error) {
       console.error('Error fetching transfers:', error);
+      setTransfers([]);
     } finally {
       setLoading(false);
     }
@@ -114,6 +114,11 @@ export const TransferHistoryCard = () => {
               const isSender = transfer.sender_id === user?.id;
               const otherParty = isSender ? transfer.recipient_profile : transfer.sender_profile;
               
+              // Safety check - this should not happen due to filtering above
+              if (!otherParty) {
+                return null;
+              }
+              
               return (
                 <div key={transfer.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
@@ -122,7 +127,7 @@ export const TransferHistoryCard = () => {
                         {isSender ? 'Sent to' : 'Received from'}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {otherParty?.full_name} ({otherParty?.banqa_id})
+                        {otherParty.full_name} ({otherParty.banqa_id})
                       </span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
