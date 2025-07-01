@@ -350,16 +350,21 @@ export const DataForm = ({ onBack }: DataFormProps) => {
                   <RadioGroup
                     value={paymentMethod}
                     onValueChange={setPaymentMethod}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="wallet" id="wallet" />
-                      <Label htmlFor="wallet" className="flex items-center gap-2 cursor-pointer">
+                      <Label htmlFor="wallet" className="flex items-center gap-2 cursor-pointer flex-1">
                         <Wallet className="h-4 w-4" />
-                        Wallet Balance
+                        <span>Wallet Balance</span>
+                        {wallet && (
+                          <span className="text-sm text-muted-foreground ml-auto">
+                            ₦{wallet.balance?.toLocaleString() || '0.00'}
+                          </span>
+                        )}
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="direct" id="direct" />
                       <Label htmlFor="direct" className="flex items-center gap-2 cursor-pointer">
                         <CreditCard className="h-4 w-4" />

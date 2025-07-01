@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Gift, ArrowLeft, CreditCard, Wallet } from 'lucide-react';
+import { Gift, ArrowLeft, CreditCard, Wallet, AlertCircle } from 'lucide-react';
 import { useReloadly } from '@/hooks/useReloadly';
 import { useRealTimeWallet } from '@/hooks/useRealTimeWallet';
 import { useDirectServicePayment } from '@/hooks/useDirectServicePayment';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface GiftCardFormProps {
   onBack: () => void;
@@ -53,6 +54,7 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
   const [products, setProducts] = useState<GiftCardProduct[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<GiftCardProduct | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   
   const { loading, getGiftCardProducts } = useReloadly();
   const { wallet, syncWallet } = useRealTimeWallet();
@@ -64,11 +66,20 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
 
   const loadGiftCardProducts = async () => {
     try {
+      setLoadingError(null);
       const productData = await getGiftCardProducts('NG');
       setProducts(productData.content || []);
       console.log('Loaded gift card products:', productData);
     } catch (error) {
       console.error('Failed to load gift card products:', error);
+      
+      // Check if it's a token issue
+      if (error instanceof Error && error.message.includes('Invalid token')) {
+        setLoadingError('Gift card service is currently unavailable. Please check your Reloadly configuration - you may be using a sandbox token in production or vice versa.');
+      } else {
+        setLoadingError('Failed to load gift card products. Please try again later.');
+      }
+      
       toast({
         title: "Error",
         description: "Failed to load gift card products. Please try again.",
@@ -237,6 +248,15 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
           </div>
         </CardHeader>
         <CardContent>
+          {loadingError && (
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {loadingError}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Recipient Email</Label>
@@ -312,16 +332,21 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
                   <RadioGroup
                     value={paymentMethod}
                     onValueChange={setPaymentMethod}
-                    className="grid grid-cols-2 gap-4"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="wallet" id="wallet" />
-                      <Label htmlFor="wallet" className="flex items-center gap-2 cursor-pointer">
+                      <Label htmlFor="wallet" className="flex items-center gap-2 cursor-pointer flex-1">
                         <Wallet className="h-4 w-4" />
-                        Wallet Balance
+                        <span>Wallet Balance</span>
+                        {wallet && (
+                          <span className="text-sm text-muted-foreground ml-auto">
+                            ₦{wallet.balance?.toLocaleString() || '0.00'}
+                          </span>
+                        )}
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 border rounded-lg p-3">
+                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-muted/50">
                       <RadioGroupItem value="direct" id="direct" />
                       <Label htmlFor="direct" className="flex items-center gap-2 cursor-pointer">
                         <CreditCard className="h-4 w-4" />
@@ -333,7 +358,7 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
               </>
             )}
 
-            {recipientEmail && amount && selectedProduct && (
+            {recipientEmail && amount && selectedProduct && !loadingError && (
               <div className="p-4 bg-muted rounded-lg">
                 <h4 className="font-medium mb-2">Transaction Summary</h4>
                 <div className="space-y-2 text-sm">
@@ -370,7 +395,7 @@ export const GiftCardForm = ({ onBack }: GiftCardFormProps) => {
             <Button
               type="submit"
               className="w-full bg-pink-600 hover:bg-pink-700"
-              disabled={processing || loading || !selectedProduct || !recipientEmail || !amount}
+              disabled={processing || loading || !selectedProduct || !recipientEmail || !amount || !!loadingError}
             >
               {processing ? 'Processing...' : paymentMethod === 'wallet' ? 'Pay from Wallet' : 'Pay with Card/Transfer'}
             </Button>
