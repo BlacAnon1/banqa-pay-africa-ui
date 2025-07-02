@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CheckCircle, AlertCircle } from 'lucide-react';
+import { calculateProfileCompletion } from '@/utils/profileCalculations';
 
 const ProfileCompletion = () => {
   const { profile, updateProfile, loading, refreshProfile } = useAuth();
@@ -72,35 +73,14 @@ const ProfileCompletion = () => {
         source_of_funds: profile.source_of_funds || '',
       });
 
-      // Calculate completion percentage - match KYCOnboarding logic
-      const requiredFields = [
-        profile.full_name, profile.phone_number, profile.date_of_birth,
-        profile.address_line_1, profile.city, profile.country_of_residence,
-        profile.occupation, profile.employer, profile.monthly_income
-      ];
-      const completedRequired = requiredFields.filter(field => field && field.toString().trim() !== '').length;
-      
-      const optionalFields = [
-        profile.gender, profile.nationality, profile.state_province,
-        profile.address_line_2, profile.postal_code, profile.source_of_funds
-      ];
-      const completedOptional = optionalFields.filter(field => field && field.toString().trim() !== '').length;
-      
-      // 80% for required fields + 20% for optional fields (same as KYCOnboarding)
-      const basePercentage = (completedRequired / requiredFields.length) * 80;
-      const bonusPercentage = (completedOptional / optionalFields.length) * 20;
+      // Use the shared calculation function for consistency
+      const percentage = calculateProfileCompletion(profile);
+      setCompletionPercentage(percentage);
       
       console.log('ProfileCompletion calculation:', {
-        completedRequired,
-        requiredFields: requiredFields.length,
-        completedOptional,
-        optionalFields: optionalFields.length,
-        basePercentage,
-        bonusPercentage,
-        total: Math.round(basePercentage + bonusPercentage)
+        profile: profile.full_name,
+        percentage
       });
-      
-      setCompletionPercentage(Math.round(basePercentage + bonusPercentage));
     }
   }, [profile]);
 
@@ -181,16 +161,16 @@ const ProfileCompletion = () => {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-primary animate-fade-in">
                 Complete Your Profile
-                {completionPercentage === 100 && <CheckCircle className="h-5 w-5 text-green-500" />}
+                {completionPercentage === 100 && <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-muted-foreground">
                 Complete your profile to access all Banqa features including cards, accounts, and crypto services.
               </CardDescription>
             </div>
             {completionPercentage >= 80 && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400 text-sm animate-scale-in">
                 <CheckCircle className="h-4 w-4" />
                 Profile Complete
               </div>
@@ -198,21 +178,21 @@ const ProfileCompletion = () => {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Profile Completion</span>
-              <span className={completionPercentage >= 80 ? 'text-green-600 font-semibold' : ''}>
+              <span className="text-foreground">Profile Completion</span>
+              <span className={`font-semibold ${completionPercentage >= 80 ? 'text-green-600 dark:text-green-400' : 'text-primary'}`}>
                 {Math.round(completionPercentage)}%
               </span>
             </div>
-            <Progress value={completionPercentage} className="h-2" />
+            <Progress value={completionPercentage} className="h-2 animate-scale-in" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="animate-fade-in">
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-slide-in-right">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Personal Information</h3>
-                  {isStepComplete(1) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                  <h3 className="text-lg font-semibold text-foreground">Personal Information</h3>
+                  {isStepComplete(1) && <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -250,10 +230,10 @@ const ProfileCompletion = () => {
             )}
 
             {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-slide-in-right">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Address Information</h3>
-                  {isStepComplete(2) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                  <h3 className="text-lg font-semibold text-foreground">Address Information</h3>
+                  {isStepComplete(2) && <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -325,10 +305,10 @@ const ProfileCompletion = () => {
             )}
 
             {step === 3 && (
-              <div className="space-y-4">
+              <div className="space-y-4 animate-slide-in-right">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Employment & Financial Information</h3>
-                  {isStepComplete(3) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                  <h3 className="text-lg font-semibold text-foreground">Employment & Financial Information</h3>
+                  {isStepComplete(3) && <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />}
                 </div>
                 
                 <div className="space-y-2">
@@ -386,7 +366,7 @@ const ProfileCompletion = () => {
                   <Button type="button" onClick={prevStep} variant="outline" className="flex-1">
                     Back
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={loading || isSaving}>
+                  <Button type="submit" className="flex-1 hover-scale" disabled={loading || isSaving}>
                     {(loading || isSaving) ? 'Updating...' : 'Update Profile'}
                   </Button>
                 </div>
