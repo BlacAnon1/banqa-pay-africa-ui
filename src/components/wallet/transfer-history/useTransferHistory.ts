@@ -32,7 +32,7 @@ export const useTransferHistory = () => {
 
         // Process the data to handle potential profile lookup errors
         const processedTransfers = data?.map(transfer => {
-          // Create properly typed profile objects or null
+          // Create properly typed profile objects or null with proper null checks
           const senderProfile = transfer.sender_profile && 
             typeof transfer.sender_profile === 'object' && 
             transfer.sender_profile !== null &&
@@ -40,9 +40,9 @@ export const useTransferHistory = () => {
             'email' in transfer.sender_profile &&
             'banqa_id' in transfer.sender_profile
             ? {
-                full_name: (transfer.sender_profile as any).full_name as string,
-                email: (transfer.sender_profile as any).email as string,
-                banqa_id: (transfer.sender_profile as any).banqa_id as string
+                full_name: (transfer.sender_profile as any).full_name as string || 'Unknown',
+                email: (transfer.sender_profile as any).email as string || 'Unknown',
+                banqa_id: (transfer.sender_profile as any).banqa_id as string || 'Unknown'
               }
             : null;
 
@@ -53,9 +53,9 @@ export const useTransferHistory = () => {
             'email' in transfer.recipient_profile &&
             'banqa_id' in transfer.recipient_profile
             ? {
-                full_name: (transfer.recipient_profile as any).full_name as string,
-                email: (transfer.recipient_profile as any).email as string,
-                banqa_id: (transfer.recipient_profile as any).banqa_id as string
+                full_name: (transfer.recipient_profile as any).full_name as string || 'Unknown',
+                email: (transfer.recipient_profile as any).email as string || 'Unknown',
+                banqa_id: (transfer.recipient_profile as any).banqa_id as string || 'Unknown'
               }
             : null;
 

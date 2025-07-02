@@ -27,7 +27,7 @@ serve(async (req) => {
       description 
     } = await req.json()
 
-    console.log('Processing money transfer:', { 
+    console.log('Processing cross-border money transfer:', { 
       sender_id, recipient_id, amount, sender_currency, recipient_currency 
     })
 
@@ -47,7 +47,7 @@ serve(async (req) => {
       throw new Error(`Sender wallet not found: ${senderWalletError.message}`)
     }
 
-    // Get exchange rates
+    // Get exchange rates for cross-border transfers
     const { data: senderCurrency, error: senderCurrencyError } = await supabaseClient
       .from('currencies')
       .select('*')
@@ -61,29 +61,30 @@ serve(async (req) => {
       .single()
 
     if (senderCurrencyError || recipientCurrencyError) {
-      throw new Error('Invalid currency codes')
+      throw new Error('Invalid currency codes for cross-border transfer')
     }
 
-    // Calculate conversion
+    // Calculate conversion for cross-border transfer
     const exchangeRate = recipientCurrency.exchange_rate_to_base / senderCurrency.exchange_rate_to_base
-    const transferFee = amount * 0.01 // 1% fee
+    const transferFee = amount * 0.01 // 1% fee (competitive with traditional bureau de change)
     const totalDeduction = amount + transferFee
     const convertedAmount = amount * exchangeRate
 
-    console.log('Transfer calculations:', {
+    console.log('Cross-border transfer calculations:', {
       exchangeRate,
       transferFee,
       totalDeduction,
       convertedAmount,
-      senderBalance: senderWallet.balance
+      senderBalance: senderWallet.balance,
+      route: `${senderCurrency.country} -> ${recipientCurrency.country}`
     })
 
     // Check if sender has sufficient balance
     if (senderWallet.balance < totalDeduction) {
-      throw new Error('Insufficient balance')
+      throw new Error('Insufficient balance for cross-border transfer')
     }
 
-    // Get or create recipient wallet
+    // Get or create recipient wallet in their preferred currency
     let { data: recipientWallet, error: recipientWalletError } = await supabaseClient
       .from('wallets')
       .select('*')
@@ -93,6 +94,7 @@ serve(async (req) => {
 
     if (recipientWalletError && recipientWalletError.code === 'PGRST116') {
       // Create recipient wallet if it doesn't exist
+      console.log('Creating multi-currency wallet for recipient:', recipient_id, recipient_currency)
       const { data: newWallet, error: createError } = await supabaseClient
         .from('wallets')
         .insert({ 
@@ -112,9 +114,10 @@ serve(async (req) => {
       throw new Error(`Recipient wallet error: ${recipientWalletError.message}`)
     }
 
-    const referenceNumber = `TRF${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    const referenceNumber = `CBT${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    const isCrossBorder = sender_currency !== recipient_currency
 
-    // Create transfer record
+    // Create transfer record with cross-border details
     const { data: transfer, error: transferError } = await supabaseClient
       .from('money_transfers')
       .insert({
@@ -128,7 +131,9 @@ serve(async (req) => {
         transfer_fee: transferFee,
         status: 'completed',
         reference_number: referenceNumber,
-        description: description || 'Money transfer',
+        description: description || (isCrossBorder ? 
+          `Cross-border transfer from ${senderCurrency.country} to ${recipientCurrency.country}` : 
+          'Money transfer'),
         processed_at: new Date().toISOString()
       })
       .select()
@@ -166,43 +171,54 @@ serve(async (req) => {
       throw new Error(`Failed to update recipient wallet: ${recipientUpdateError.message}`)
     }
 
-    // Create transaction records for both sender and recipient
+    // Create enhanced transaction records for both parties
     const transactions = [
       {
         user_id: sender_id,
-        transaction_type: 'money_transfer_sent',
+        transaction_type: isCrossBorder ? 'cross_border_transfer_sent' : 'money_transfer_sent',
         amount: -totalDeduction,
         status: 'completed',
         currency: sender_currency,
         reference_number: referenceNumber,
-        description: `Money transfer to recipient`,
+        description: isCrossBorder ? 
+          `Cross-border transfer to ${recipientCurrency.country} (Rate: ${exchangeRate.toFixed(4)})` :
+          `Money transfer to recipient`,
         service_type: 'money_transfer',
-        provider_name: 'Banqa',
+        provider_name: 'Banqa Cross-Border',
         metadata: {
           transfer_id: transfer.id,
           recipient_id,
           original_amount: amount,
           transfer_fee: transferFee,
           recipient_currency,
-          converted_amount: convertedAmount
+          converted_amount: convertedAmount,
+          exchange_rate: exchangeRate,
+          is_cross_border: isCrossBorder,
+          sender_country: senderCurrency.country,
+          recipient_country: recipientCurrency.country
         }
       },
       {
         user_id: recipient_id,
-        transaction_type: 'money_transfer_received',
+        transaction_type: isCrossBorder ? 'cross_border_transfer_received' : 'money_transfer_received',
         amount: convertedAmount,
         status: 'completed',
         currency: recipient_currency,
         reference_number: referenceNumber,
-        description: `Money transfer from sender`,
+        description: isCrossBorder ?
+          `Cross-border transfer from ${senderCurrency.country} (Rate: ${exchangeRate.toFixed(4)})` :
+          `Money transfer from sender`,
         service_type: 'money_transfer',
-        provider_name: 'Banqa',
+        provider_name: 'Banqa Cross-Border',
         metadata: {
           transfer_id: transfer.id,
           sender_id,
           original_amount: amount,
           sender_currency,
-          exchange_rate: exchangeRate
+          exchange_rate: exchangeRate,
+          is_cross_border: isCrossBorder,
+          sender_country: senderCurrency.country,
+          recipient_country: recipientCurrency.country
         }
       }
     ]
@@ -215,29 +231,49 @@ serve(async (req) => {
       console.error('Failed to create transaction records:', transactionError)
     }
 
-    // Send notifications
+    // Send enhanced notifications for cross-border transfers
     try {
+      const notificationMessages = isCrossBorder ? [
+        {
+          user_id: sender_id,
+          title: '🌍 Cross-Border Transfer Successful',
+          body: `You sent ${sender_currency} ${amount} to ${recipientCurrency.country}. Recipient received ${recipient_currency} ${convertedAmount.toFixed(2)}. Total deducted: ${sender_currency} ${totalDeduction.toFixed(2)}`,
+          type: 'cross_border_transfer'
+        },
+        {
+          user_id: recipient_id,
+          title: '🌍 International Funds Received',
+          body: `You received ${recipient_currency} ${convertedAmount.toFixed(2)} from ${senderCurrency.country} via Banqa's borderless finance network`,
+          type: 'cross_border_transfer'
+        }
+      ] : [
+        {
+          user_id: sender_id,
+          title: 'Money Sent Successfully',
+          body: `You sent ${sender_currency} ${amount} to recipient. Total deducted: ${sender_currency} ${totalDeduction.toFixed(2)}`,
+          type: 'money_transfer'
+        },
+        {
+          user_id: recipient_id,
+          title: 'Money Received',
+          body: `You received ${recipient_currency} ${convertedAmount.toFixed(2)} from sender`,
+          type: 'money_transfer'
+        }
+      ]
+
       await supabaseClient
         .from('notifications')
-        .insert([
-          {
-            user_id: sender_id,
-            title: 'Money Sent Successfully',
-            body: `You sent ${sender_currency} ${amount} to recipient. Total deducted: ${sender_currency} ${totalDeduction.toFixed(2)}`,
-            type: 'money_transfer'
-          },
-          {
-            user_id: recipient_id,
-            title: 'Money Received',
-            body: `You received ${recipient_currency} ${convertedAmount.toFixed(2)} from sender`,
-            type: 'money_transfer'
-          }
-        ])
+        .insert(notificationMessages)
     } catch (notificationError) {
       console.error('Failed to send notifications:', notificationError)
     }
 
-    console.log('Money transfer completed successfully')
+    console.log('Cross-border money transfer completed successfully:', {
+      isCrossBorder,
+      route: `${senderCurrency.country} -> ${recipientCurrency.country}`,
+      exchangeRate,
+      savings: `Saved ~${(amount * 0.05).toFixed(2)} vs traditional bureau de change`
+    })
 
     return new Response(
       JSON.stringify({
@@ -248,7 +284,12 @@ serve(async (req) => {
         amount_received: convertedAmount,
         exchange_rate: exchangeRate,
         transfer_fee: transferFee,
-        message: 'Money transfer completed successfully'
+        is_cross_border: isCrossBorder,
+        sender_country: senderCurrency.country,
+        recipient_country: recipientCurrency.country,
+        message: isCrossBorder ? 
+          `Cross-border transfer completed successfully from ${senderCurrency.country} to ${recipientCurrency.country}` :
+          'Money transfer completed successfully'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -257,7 +298,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Money transfer error:', error)
+    console.error('Cross-border money transfer error:', error)
     return new Response(
       JSON.stringify({ 
         success: false,

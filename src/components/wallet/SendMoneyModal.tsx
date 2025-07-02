@@ -9,7 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { RecipientSearch } from './send-money/RecipientSearch';
 import { RecipientCard } from './send-money/RecipientCard';
 import { TransferForm } from './send-money/TransferForm';
-import { TransferSummary } from './send-money/TransferSummary';
+import { EnhancedTransferSummary } from './send-money/EnhancedTransferSummary';
+import { CrossBorderTransferInfo } from './send-money/CrossBorderTransferInfo';
 import { PinVerificationStep } from './send-money/PinVerificationStep';
 import { useSendMoney } from './send-money/useSendMoney';
 
@@ -112,12 +113,13 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
   };
 
   const selectedCurrencyInfo = currencies.find(c => c.code === selectedCurrency);
+  const senderCurrencyInfo = currencies.find(c => c.code === 'NGN'); // Assuming sender is always NGN for now
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Send Money to Banqa User</DialogTitle>
+          <DialogTitle>Send Money - Borderless African Finance</DialogTitle>
         </DialogHeader>
 
         {step === 1 && (
@@ -143,14 +145,25 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
               currencies={currencies}
             />
 
-            {amount && selectedCurrencyInfo && (
-              <TransferSummary
-                amount={amount}
-                selectedCurrencyInfo={selectedCurrencyInfo}
-                transferFee={transferFee}
-                convertedAmount={convertedAmount}
-                exchangeRate={exchangeRate}
-              />
+            {amount && selectedCurrencyInfo && senderCurrencyInfo && (
+              <>
+                <CrossBorderTransferInfo
+                  senderCurrency="NGN"
+                  recipientCurrency={selectedCurrency}
+                  exchangeRate={exchangeRate}
+                  transferFee={transferFee}
+                  amount={parseFloat(amount)}
+                />
+
+                <EnhancedTransferSummary
+                  amount={amount}
+                  senderCurrency={senderCurrencyInfo}
+                  recipientCurrency={selectedCurrencyInfo}
+                  transferFee={transferFee}
+                  convertedAmount={convertedAmount}
+                  exchangeRate={exchangeRate}
+                />
+              </>
             )}
 
             {parseFloat(amount) + transferFee > userBalance && (
@@ -188,20 +201,21 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
           />
         )}
 
-        {step === 4 && pinVerified && selectedRecipient && selectedCurrencyInfo && (
+        {step === 4 && pinVerified && selectedRecipient && selectedCurrencyInfo && senderCurrencyInfo && (
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Confirm Transfer</h3>
+              <h3 className="text-lg font-semibold mb-2">Confirm Cross-Border Transfer</h3>
               <p className="text-sm text-muted-foreground">
-                Please review the details below before sending
+                Supporting borderless finance across Africa
               </p>
             </div>
 
             <RecipientCard recipient={selectedRecipient} />
             
-            <TransferSummary
+            <EnhancedTransferSummary
               amount={amount}
-              selectedCurrencyInfo={selectedCurrencyInfo}
+              senderCurrency={senderCurrencyInfo}
+              recipientCurrency={selectedCurrencyInfo}
               transferFee={transferFee}
               convertedAmount={convertedAmount}
               exchangeRate={exchangeRate}
@@ -216,10 +230,10 @@ export const SendMoneyModal = ({ open, onOpenChange, userBalance }: SendMoneyMod
                 disabled={loading}
                 className="flex-1"
               >
-                {loading ? 'Sending...' : (
+                {loading ? 'Processing...' : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Send Money
+                    Complete Transfer
                   </>
                 )}
               </Button>
