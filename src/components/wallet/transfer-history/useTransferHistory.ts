@@ -32,28 +32,32 @@ export const useTransferHistory = () => {
 
         // Process the data to handle potential profile lookup errors
         const processedTransfers = data?.map(transfer => {
-          let senderProfile = null;
-          let recipientProfile = null;
+          // Create properly typed profile objects or null
+          const senderProfile = transfer.sender_profile && 
+            typeof transfer.sender_profile === 'object' && 
+            transfer.sender_profile !== null &&
+            'full_name' in transfer.sender_profile &&
+            'email' in transfer.sender_profile &&
+            'banqa_id' in transfer.sender_profile
+            ? {
+                full_name: transfer.sender_profile.full_name as string,
+                email: transfer.sender_profile.email as string,
+                banqa_id: transfer.sender_profile.banqa_id as string
+              }
+            : null;
 
-          // Handle sender profile - check if it's a valid profile object
-          if (transfer.sender_profile && 
-              typeof transfer.sender_profile === 'object' && 
-              transfer.sender_profile !== null &&
-              'full_name' in transfer.sender_profile &&
-              'email' in transfer.sender_profile &&
-              'banqa_id' in transfer.sender_profile) {
-            senderProfile = transfer.sender_profile;
-          }
-
-          // Handle recipient profile - check if it's a valid profile object  
-          if (transfer.recipient_profile && 
-              typeof transfer.recipient_profile === 'object' && 
-              transfer.recipient_profile !== null &&
-              'full_name' in transfer.recipient_profile &&
-              'email' in transfer.recipient_profile &&
-              'banqa_id' in transfer.recipient_profile) {
-            recipientProfile = transfer.recipient_profile;
-          }
+          const recipientProfile = transfer.recipient_profile && 
+            typeof transfer.recipient_profile === 'object' && 
+            transfer.recipient_profile !== null &&
+            'full_name' in transfer.recipient_profile &&
+            'email' in transfer.recipient_profile &&
+            'banqa_id' in transfer.recipient_profile
+            ? {
+                full_name: transfer.recipient_profile.full_name as string,
+                email: transfer.recipient_profile.email as string,
+                banqa_id: transfer.recipient_profile.banqa_id as string
+              }
+            : null;
 
           return {
             ...transfer,

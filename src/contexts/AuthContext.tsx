@@ -32,6 +32,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 0);
         } else {
           setProfile(null);
+          // Clear sensitive data on logout
+          const { SecurityService } = await import('@/services/securityService');
+          SecurityService.clearSensitiveData();
         }
         
         setLoading(false);
@@ -58,7 +61,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (data: SignUpData) => {
     setLoading(true);
     try {
-      const result = await authService.signUp(data);
+      // Enhanced validation
+      const { SecurityService } = await import('@/services/securityService');
+      
+      if (!SecurityService.validateEmail(data.email)) {
+        return { error: { message: 'Please enter a valid email address' } };
+      }
+      
+      const passwordValidation = SecurityService.validatePassword(data.password);
+      if (!passwordValidation.isValid) {
+        return { error: { message: passwordValidation.errors.join('. ') } };
+      }
+      
+      if (!SecurityService.checkRateLimit('signup')) {
+        return { error: { message: 'Too many signup attempts. Please try again later.' } };
+      }
+      
+      // Sanitize inputs
+      const sanitizedData = {
+        ...data,
+        email: SecurityService.sanitizeInput(data.email),
+        fullName: SecurityService.sanitizeInput(data.fullName),
+        phoneNumber: data.phoneNumber ? SecurityService.sanitizeInput(data.phoneNumber) : undefined,
+        countryOfResidence: SecurityService.sanitizeInput(data.countryOfResidence),
+      };
+      
+      const result = await authService.signUp(sanitizedData);
       return result;
     } finally {
       setLoading(false);
@@ -68,7 +96,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const result = await authService.signIn(email, password);
+      const { SecurityService } = await import('@/services/securityService');
+      
+      if (!SecurityService.checkRateLimit('signin')) {
+        return { error: { message: 'Too many login attempts. Please try again later.' } };
+      }
+      
+      // Sanitize inputs
+      const sanitizedEmail = SecurityService.sanitizeInput(email);
+      
+      const result = await authService.signIn(sanitizedEmail, password);
       return result;
     } finally {
       setLoading(false);
@@ -76,6 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    const { SecurityService } = await import('@/services/securityService');
+    SecurityService.clearSensitiveData();
+    
     await authService.signOut();
     setUser(null);
     setSession(null);
