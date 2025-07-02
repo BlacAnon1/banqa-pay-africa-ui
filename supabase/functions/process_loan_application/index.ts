@@ -43,6 +43,8 @@ serve(async (req) => {
       throw new Error('Missing application_id')
     }
 
+    console.log(`Processing loan application: ${application_id}`)
+
     // Get loan application details
     const { data: application, error: appError } = await supabaseClient
       .from('loan_applications')
@@ -59,6 +61,7 @@ serve(async (req) => {
       .single()
 
     if (appError || !application) {
+      console.error('Loan application not found:', appError)
       throw new Error('Loan application not found')
     }
 
@@ -67,39 +70,53 @@ serve(async (req) => {
 
     // Check if provider has real API integration
     if (provider.api_endpoint && provider.api_key_required) {
-      console.log(`Processing with real provider: ${provider.name}`)
+      console.log(`Processing with real provider API: ${provider.name}`)
       
-      // This is where you'd integrate with real loan providers
-      // For now, we'll simulate the process but structure it for real integration
+      // Get the API key from Supabase secrets using the provider name
+      const apiKeyName = `${provider.name.toUpperCase().replace(/\s+/g, '_')}_API_KEY`
+      const apiKey = Deno.env.get(apiKeyName)
       
-      try {
-        // Example integration structure (you'll need actual API keys and endpoints)
-        const providerResponse = await fetch(provider.api_endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get(`${provider.name.toUpperCase()}_API_KEY`)}`,
-          },
-          body: JSON.stringify({
-            applicant_id: application.user_id,
-            loan_amount: application.amount,
-            tenure_months: application.tenure_months,
-            purpose: application.purpose,
-            employment_status: application.employment_status,
-            monthly_income: application.monthly_income,
-            interest_rate: application.interest_rate
+      if (!apiKey) {
+        console.error(`API key not found for provider: ${provider.name}. Expected secret: ${apiKeyName}`)
+        // Fall back to simulation if API key is missing
+        integrationResult = { error: 'API key not configured', fallback: true }
+      } else {
+        try {
+          console.log(`Making API call to: ${provider.api_endpoint}`)
+          
+          const providerResponse = await fetch(provider.api_endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`,
+              'X-API-Key': apiKey, // Some providers use this header instead
+            },
+            body: JSON.stringify({
+              applicant_id: application.user_id,
+              loan_amount: application.amount,
+              tenure_months: application.tenure_months,
+              purpose: application.purpose,
+              employment_status: application.employment_status,
+              monthly_income: application.monthly_income,
+              interest_rate: application.interest_rate,
+              // Add additional fields that might be required by real providers
+              application_reference: application_id,
+              callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/loan_callback`
+            })
           })
-        })
 
-        if (providerResponse.ok) {
-          integrationResult = await providerResponse.json()
-        } else {
-          console.error(`Provider API error: ${providerResponse.status}`)
-          integrationResult = { error: 'Provider API unavailable' }
+          if (providerResponse.ok) {
+            integrationResult = await providerResponse.json()
+            console.log('Provider API response:', integrationResult)
+          } else {
+            const errorText = await providerResponse.text()
+            console.error(`Provider API error: ${providerResponse.status} - ${errorText}`)
+            integrationResult = { error: 'Provider API unavailable', fallback: true }
+          }
+        } catch (apiError) {
+          console.error('Provider integration error:', apiError)
+          integrationResult = { error: 'Integration failed', fallback: true }
         }
-      } catch (apiError) {
-        console.error('Provider integration error:', apiError)
-        integrationResult = { error: 'Integration failed', fallback: true }
       }
     }
 
@@ -108,20 +125,24 @@ serve(async (req) => {
     let providerReference = null
     let rejectionReason = null
 
-    if (integrationResult) {
-      if (integrationResult.approved) {
+    if (integrationResult && !integrationResult.fallback) {
+      // Handle real provider response
+      if (integrationResult.approved || integrationResult.status === 'approved') {
         newStatus = 'approved'
-        providerReference = integrationResult.reference_id
-      } else if (integrationResult.rejected) {
+        providerReference = integrationResult.reference_id || integrationResult.loan_id
+      } else if (integrationResult.rejected || integrationResult.status === 'rejected') {
         newStatus = 'rejected'
-        rejectionReason = integrationResult.reason || 'Application did not meet provider criteria'
+        rejectionReason = integrationResult.reason || integrationResult.rejection_reason || 'Application did not meet provider criteria'
+      } else if (integrationResult.status === 'pending') {
+        newStatus = 'pending'
+        providerReference = integrationResult.reference_id || integrationResult.application_id
       }
     } else {
-      // For providers without real-time integration, simulate intelligent processing
-      console.log(`Simulating processing for: ${provider.name}`)
+      // Fallback to simulation for providers without real-time integration
+      console.log(`Using simulation for provider: ${provider.name}`)
       
-      // Simulate approval logic based on application data
       const creditworthiness = calculateCreditworthiness(application)
+      console.log(`Calculated creditworthiness score: ${creditworthiness}`)
       
       if (creditworthiness >= 70) {
         newStatus = 'approved'
@@ -133,6 +154,8 @@ serve(async (req) => {
         rejectionReason = 'Insufficient creditworthiness for automated approval'
       }
     }
+
+    console.log(`Updating application status to: ${newStatus}`)
 
     // Update application status
     const { error: updateError } = await supabaseClient
@@ -146,6 +169,7 @@ serve(async (req) => {
       .eq('id', application_id)
 
     if (updateError) {
+      console.error('Failed to update application status:', updateError)
       throw new Error('Failed to update application status')
     }
 
@@ -176,13 +200,16 @@ serve(async (req) => {
       }
     })
 
+    console.log(`Notification sent for application: ${application_id}`)
+
     return new Response(
       JSON.stringify({
         success: true,
         application_id: application_id,
         status: newStatus,
         provider_reference: providerReference,
-        integration_used: !!provider.api_endpoint
+        integration_used: !!provider.api_endpoint,
+        creditworthiness_score: integrationResult?.fallback ? calculateCreditworthiness(application) : null
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
