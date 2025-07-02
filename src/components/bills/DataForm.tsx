@@ -262,8 +262,8 @@ export const DataForm = ({ onBack }: DataFormProps) => {
             </Button>
             <div>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                  <Wifi className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                  <Wifi className="h-5 w-5 text-primary-foreground" />
                 </div>
                 Data Bundle
               </CardTitle>
@@ -411,7 +411,7 @@ export const DataForm = ({ onBack }: DataFormProps) => {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full banqa-gradient hover:opacity-90"
               disabled={processing || loading || !selectedOperator || !phoneNumber || !amount}
             >
               {processing ? 'Processing...' : paymentMethod === 'wallet' ? 'Pay from Wallet' : 'Pay with Card/Transfer'}

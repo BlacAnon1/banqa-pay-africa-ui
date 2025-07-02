@@ -46,7 +46,7 @@ export const NotificationCenter = () => {
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-2 -right-2 px-1 py-0 text-xs h-5 min-w-5 rounded-full bg-red-500 hover:bg-red-500 text-white">
+            <Badge className="absolute -top-2 -right-2 px-1 py-0 text-xs h-5 min-w-5 rounded-full bg-destructive hover:bg-destructive text-destructive-foreground">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
@@ -86,7 +86,7 @@ export const NotificationCenter = () => {
                     <div
                       key={notification.id}
                       className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 border-b last:border-b-0 ${
-                        !notification.read ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
+                        !notification.read ? 'bg-muted/50' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification.id, notification.read)}
                     >
@@ -102,7 +102,7 @@ export const NotificationCenter = () => {
                               {notification.title}
                             </h4>
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                              <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5"></div>
                             )}
                           </div>
                           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">

@@ -190,8 +190,8 @@ export const InternetForm = ({ onBack }: InternetFormProps) => {
             </Button>
             <div>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-                  <Wifi className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+                  <Wifi className="h-5 w-5 text-secondary-foreground" />
                 </div>
                 Internet Subscription
               </CardTitle>
@@ -309,7 +309,7 @@ export const InternetForm = ({ onBack }: InternetFormProps) => {
 
             <Button
               type="submit"
-              className="w-full bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-secondary hover:bg-secondary/90"
               disabled={processing || !selectedProvider || !selectedPlan || !deviceId}
             >
               {processing ? 'Processing...' : paymentMethod === 'wallet' ? 'Pay from Wallet' : 'Pay with Card/Transfer'}

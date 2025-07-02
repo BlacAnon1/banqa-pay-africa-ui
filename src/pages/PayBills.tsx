@@ -25,41 +25,41 @@ const PayBills = () => {
 
   const services = [
     // Core Services (Active)
-    { id: 'airtime', name: 'Airtime & Data', icon: Smartphone, color: 'bg-green-500', description: 'Mobile airtime & data bundles', active: true },
-    { id: 'data', name: 'Data Bundles', icon: Wifi, color: 'bg-blue-500', description: 'Mobile data packages', active: true },
-    { id: 'electricity', name: t('bills.electricity'), icon: Zap, color: 'bg-yellow-500', description: 'Power utilities', active: true },
-    { id: 'water', name: t('bills.water'), icon: Droplets, color: 'bg-blue-400', description: 'Water utilities', active: true },
-    { id: 'internet', name: t('bills.internet'), icon: Wifi, color: 'bg-purple-500', description: 'Internet & broadband', active: true },
-    { id: 'tv', name: t('bills.tv'), icon: Tv, color: 'bg-indigo-500', description: 'TV subscriptions', active: true },
-    { id: 'gift_cards', name: 'Gift Cards', icon: Gift, color: 'bg-pink-500', description: 'Digital gift cards', active: true },
+    { id: 'airtime', name: 'Airtime & Data', icon: Smartphone, color: 'bg-primary', description: 'Mobile airtime & data bundles', active: true },
+    { id: 'data', name: 'Data Bundles', icon: Wifi, color: 'bg-primary', description: 'Mobile data packages', active: true },
+    { id: 'electricity', name: t('bills.electricity'), icon: Zap, color: 'bg-accent', description: 'Power utilities', active: true },
+    { id: 'water', name: t('bills.water'), icon: Droplets, color: 'bg-primary', description: 'Water utilities', active: true },
+    { id: 'internet', name: t('bills.internet'), icon: Wifi, color: 'bg-secondary', description: 'Internet & broadband', active: true },
+    { id: 'tv', name: t('bills.tv'), icon: Tv, color: 'bg-primary', description: 'TV subscriptions', active: true },
+    { id: 'gift_cards', name: 'Gift Cards', icon: Gift, color: 'bg-accent', description: 'Digital gift cards', active: true },
     
     // Transportation
-    { id: 'fuel', name: 'Fuel Payment', icon: Fuel, color: 'bg-orange-500', description: 'Petrol stations & fuel cards', active: false },
-    { id: 'transport', name: 'Public Transport', icon: Bus, color: 'bg-red-500', description: 'Bus, taxi & metro cards', active: false },
-    { id: 'flight', name: 'Flight Booking', icon: Plane, color: 'bg-sky-500', description: 'Airline tickets & bookings', active: false },
-    { id: 'train', name: 'Train Tickets', icon: Train, color: 'bg-green-600', description: 'Railway bookings', active: false },
-    { id: 'ride_hailing', name: 'Ride Hailing', icon: Car, color: 'bg-gray-800', description: 'Uber, Bolt, taxi services', active: false },
-    { id: 'logistics', name: 'Logistics & Delivery', icon: Truck, color: 'bg-brown-500', description: 'Package delivery services', active: false },
+    { id: 'fuel', name: 'Fuel Payment', icon: Fuel, color: 'bg-secondary', description: 'Petrol stations & fuel cards', active: false },
+    { id: 'transport', name: 'Public Transport', icon: Bus, color: 'bg-destructive', description: 'Bus, taxi & metro cards', active: false },
+    { id: 'flight', name: 'Flight Booking', icon: Plane, color: 'bg-primary', description: 'Airline tickets & bookings', active: false },
+    { id: 'train', name: 'Train Tickets', icon: Train, color: 'bg-primary', description: 'Railway bookings', active: false },
+    { id: 'ride_hailing', name: 'Ride Hailing', icon: Car, color: 'bg-muted', description: 'Uber, Bolt, taxi services', active: false },
+    { id: 'logistics', name: 'Logistics & Delivery', icon: Truck, color: 'bg-secondary', description: 'Package delivery services', active: false },
     
     // Financial Services
-    { id: 'insurance', name: 'Insurance', icon: Shield, color: 'bg-emerald-500', description: 'Health, auto & life insurance', active: false },
-    { id: 'loans', name: 'Loan Payments', icon: CreditCard, color: 'bg-slate-500', description: 'Bank loans & microfinance', active: false },
-    { id: 'savings', name: 'Savings Plans', icon: Banknote, color: 'bg-teal-500', description: 'Investment & savings schemes', active: false },
-    { id: 'pension', name: 'Pension Fund', icon: Users, color: 'bg-gray-500', description: 'Retirement savings', active: false },
-    { id: 'accounting', name: 'Accounting Services', icon: Calculator, color: 'bg-blue-700', description: 'Bookkeeping & tax services', active: false },
+    { id: 'insurance', name: 'Insurance', icon: Shield, color: 'bg-primary', description: 'Health, auto & life insurance', active: false },
+    { id: 'loans', name: 'Loan Payments', icon: CreditCard, color: 'bg-muted', description: 'Bank loans & microfinance', active: false },
+    { id: 'savings', name: 'Savings Plans', icon: Banknote, color: 'bg-primary', description: 'Investment & savings schemes', active: false },
+    { id: 'pension', name: 'Pension Fund', icon: Users, color: 'bg-muted', description: 'Retirement savings', active: false },
+    { id: 'accounting', name: 'Accounting Services', icon: Calculator, color: 'bg-primary', description: 'Bookkeeping & tax services', active: false },
     
     // Education & Healthcare
-    { id: 'school', name: 'School Fees', icon: GraduationCap, color: 'bg-blue-600', description: 'Tuition & educational fees', active: false },
-    { id: 'healthcare', name: 'Healthcare', icon: Heart, color: 'bg-red-400', description: 'Hospital bills & medical', active: false },
-    { id: 'pharmacy', name: 'Pharmacy', icon: Stethoscope, color: 'bg-green-400', description: 'Medication & prescriptions', active: false },
-    { id: 'childcare', name: 'Childcare', icon: Baby, color: 'bg-pink-400', description: 'Daycare & nursery fees', active: false },
-    { id: 'books', name: 'Books & Learning', icon: Book, color: 'bg-amber-700', description: 'Educational materials', active: false },
+    { id: 'school', name: 'School Fees', icon: GraduationCap, color: 'bg-primary', description: 'Tuition & educational fees', active: false },
+    { id: 'healthcare', name: 'Healthcare', icon: Heart, color: 'bg-destructive', description: 'Hospital bills & medical', active: false },
+    { id: 'pharmacy', name: 'Pharmacy', icon: Stethoscope, color: 'bg-primary', description: 'Medication & prescriptions', active: false },
+    { id: 'childcare', name: 'Childcare', icon: Baby, color: 'bg-accent', description: 'Daycare & nursery fees', active: false },
+    { id: 'books', name: 'Books & Learning', icon: Book, color: 'bg-secondary', description: 'Educational materials', active: false },
     
     // Government & Legal
-    { id: 'taxes', name: 'Tax Payments', icon: Receipt, color: 'bg-amber-500', description: 'Income tax & VAT', active: false },
-    { id: 'government', name: 'Government Services', icon: Building, color: 'bg-indigo-600', description: 'Licenses, permits & fines', active: false },
-    { id: 'legal', name: 'Legal Services', icon: Briefcase, color: 'bg-purple-600', description: 'Court fees & legal payments', active: false },
-    { id: 'documents', name: 'Document Services', icon: FileText, color: 'bg-gray-600', description: 'Certification & notary', active: false },
+    { id: 'taxes', name: 'Tax Payments', icon: Receipt, color: 'bg-accent', description: 'Income tax & VAT', active: false },
+    { id: 'government', name: 'Government Services', icon: Building, color: 'bg-primary', description: 'Licenses, permits & fines', active: false },
+    { id: 'legal', name: 'Legal Services', icon: Briefcase, color: 'bg-secondary', description: 'Court fees & legal payments', active: false },
+    { id: 'documents', name: 'Document Services', icon: FileText, color: 'bg-muted', description: 'Certification & notary', active: false },
     
     // Home & Property
     { id: 'rent', name: 'Rent Payments', icon: Home, color: 'bg-orange-600', description: 'House rent & property', active: false },
@@ -142,7 +142,7 @@ const PayBills = () => {
                 >
                   <CardHeader className="text-center pb-2">
                     <div className={`w-12 h-12 rounded-full ${service.color} flex items-center justify-center mx-auto mb-2`}>
-                      <service.icon className="h-6 w-6 text-white" />
+                      <service.icon className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-base font-semibold">{service.name}</CardTitle>
                     <CardDescription className="text-xs">{service.description}</CardDescription>
@@ -163,7 +163,7 @@ const PayBills = () => {
                 >
                   <CardHeader className="text-center py-3">
                     <div className={`w-8 h-8 rounded-full ${service.color} flex items-center justify-center mx-auto mb-1`}>
-                      <service.icon className="h-4 w-4 text-white" />
+                      <service.icon className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-xs font-medium">{service.name}</CardTitle>
                     <div className="text-xs text-muted-foreground font-medium">Soon</div>

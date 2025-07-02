@@ -21,8 +21,8 @@ export const CreditScoreCard = () => {
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
-            <div className="h-20 bg-gray-200 rounded"></div>
-            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-20 bg-muted rounded"></div>
+            <div className="h-4 bg-muted rounded w-3/4"></div>
           </div>
         </CardContent>
       </Card>
@@ -53,10 +53,10 @@ export const CreditScoreCard = () => {
   };
 
   const getGradeColor = (grade: string) => {
-    if (grade.startsWith('A')) return 'bg-green-100 text-green-800';
-    if (grade.startsWith('B')) return 'bg-blue-100 text-blue-800';
-    if (grade.startsWith('C')) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
+    if (grade.startsWith('A')) return 'bg-primary/10 text-primary';
+    if (grade.startsWith('B')) return 'bg-secondary/10 text-secondary';
+    if (grade.startsWith('C')) return 'bg-accent/10 text-accent';
+    return 'bg-destructive/10 text-destructive';
   };
 
   return (

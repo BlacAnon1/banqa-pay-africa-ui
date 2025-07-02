@@ -32,7 +32,7 @@ export const StatsCards = ({ wallet, loading, onAddFunds }: StatsCardsProps) => 
           <div className="text-3xl font-bold text-primary flex items-center gap-2">
             {loading ? '₦...' : formatCurrency(wallet?.balance || 0)}
             {!loading && (
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" title="Live balance"></span>
+              <span className="w-2 h-2 bg-primary rounded-full animate-pulse" title="Live balance"></span>
             )}
           </div>
           <Button 

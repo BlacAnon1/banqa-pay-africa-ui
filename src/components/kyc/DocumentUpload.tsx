@@ -43,14 +43,14 @@ const DocumentUpload = () => {
   const getStatusIcon = (status: KYCStatus) => {
     switch (status) {
       case 'approved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
+        return <CheckCircle className="h-5 w-5 text-primary" />;
       case 'under_review':
       case 'in_progress':
-        return <Clock className="h-5 w-5 text-yellow-500" />;
+        return <Clock className="h-5 w-5 text-secondary" />;
       case 'rejected':
-        return <XCircle className="h-5 w-5 text-red-500" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <FileText className="h-5 w-5 text-gray-500" />;
+        return <FileText className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
@@ -216,11 +216,11 @@ const DocumentUpload = () => {
                 id="file-upload"
               />
               <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-lg font-medium">
                   {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   PNG, JPG, PDF up to 5MB
                 </p>
               </label>
@@ -246,7 +246,7 @@ const DocumentUpload = () => {
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
+            <p className="text-center text-muted-foreground py-8">
               No documents uploaded yet
             </p>
           ) : (
@@ -259,7 +259,7 @@ const DocumentUpload = () => {
                       <p className="font-medium">
                         {documentTypes.find(t => t.value === doc.document_type)?.label}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         Uploaded {new Date(doc.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -269,7 +269,7 @@ const DocumentUpload = () => {
                       {doc.verification_status.replace('_', ' ')}
                     </p>
                     {doc.document_number && (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-muted-foreground">
                         {doc.document_number}
                       </p>
                     )}

@@ -115,7 +115,7 @@ export const QuickPaySection = ({ onCustomize }: QuickPaySectionProps) => {
                   onClick={() => handleServiceClick(preference.service_name)}
                 >
                   <div className={`w-10 h-10 rounded-full ${preference.service_color} flex items-center justify-center shadow-md`}>
-                    <IconComponent className="h-5 w-5 text-white" />
+                    <IconComponent className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <span className="text-xs font-medium text-center leading-tight">
                     {getServiceDisplayName(preference.service_name)}

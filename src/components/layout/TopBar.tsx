@@ -130,7 +130,7 @@ export function TopBar() {
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
             <div className="w-10 h-10 banqa-gradient rounded-full flex items-center justify-center shadow-lg cultural-card">
-              <span className="text-white font-bold text-sm">
+              <span className="text-primary-foreground font-bold text-sm">
                 {profile?.full_name?.charAt(0) || 'U'}
               </span>
             </div>

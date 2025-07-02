@@ -117,7 +117,7 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
                       <X className="absolute top-1 right-1 h-4 w-4" />
                     )}
                     <div className={`w-8 h-8 rounded-full ${service.color} flex items-center justify-center`}>
-                      <IconComponent className="h-4 w-4 text-white" />
+                      <IconComponent className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <span className="text-xs text-center leading-tight">
                       {getServiceDisplayName(service.name)}
@@ -143,7 +143,7 @@ export const CustomizeQuickPayModal = ({ open, onOpenChange }: CustomizeQuickPay
                     <div key={preference.id} className="relative">
                       <div className="h-16 flex flex-col items-center gap-2 p-2 border rounded-lg">
                         <div className={`w-6 h-6 rounded-full ${preference.service_color} flex items-center justify-center`}>
-                          <IconComponent className="h-3 w-3 text-white" />
+                          <IconComponent className="h-3 w-3 text-primary-foreground" />
                         </div>
                         <span className="text-xs text-center leading-tight">
                           {getServiceDisplayName(preference.service_name)}

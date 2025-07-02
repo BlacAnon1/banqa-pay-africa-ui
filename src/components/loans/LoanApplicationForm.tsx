@@ -282,16 +282,16 @@ export const LoanApplicationForm = ({ provider, onBack, creditScore }: LoanAppli
             </div>
 
             {creditScore && (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <p className="text-sm text-green-800">
+              <div className="bg-primary/10 p-4 rounded-lg">
+                <p className="text-sm text-primary">
                   ✓ Your credit score of {creditScore} qualifies you for a {interestRate.toFixed(2)}% interest rate
                 </p>
               </div>
             )}
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="font-semibold text-blue-900 mb-2">Real-Time Processing</h4>
-              <p className="text-sm text-blue-800">
+            <div className="bg-secondary/10 p-4 rounded-lg">
+              <h4 className="font-semibold text-secondary mb-2">Real-Time Processing</h4>
+              <p className="text-sm text-secondary">
                 This application will be submitted to {provider.name} for real-time processing. You'll receive updates on approval status within 24-48 hours.
               </p>
             </div>

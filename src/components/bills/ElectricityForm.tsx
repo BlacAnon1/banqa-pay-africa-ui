@@ -200,8 +200,8 @@ export const ElectricityForm = ({ onBack }: ElectricityFormProps) => {
             </Button>
             <div>
               <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-yellow-500 flex items-center justify-center">
-                  <Zap className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-accent-foreground" />
                 </div>
                 Electricity Bill
               </CardTitle>
@@ -345,7 +345,7 @@ export const ElectricityForm = ({ onBack }: ElectricityFormProps) => {
 
             <Button
               type="submit"
-              className="w-full bg-yellow-600 hover:bg-yellow-700"
+              className="w-full bg-accent hover:bg-accent/90"
               disabled={processing || !selectedProvider || !selectedMeterType || !meterNumber || !amount}
             >
               {processing ? 'Processing...' : paymentMethod === 'wallet' ? 'Pay from Wallet' : 'Pay with Card/Transfer'}
