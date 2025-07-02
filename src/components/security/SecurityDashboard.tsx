@@ -3,199 +3,148 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield, AlertTriangle, CheckCircle, Clock, Lock, Key } from 'lucide-react';
-import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { Shield, AlertTriangle, CheckCircle, Clock, User, Lock, Eye, Settings } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { SecurePinManager } from './SecurePinManager';
+import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
 
 export const SecurityDashboard = () => {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const { securityStatus, lastSecurityCheck } = useSecurityMonitoring();
-  const [showPinManager, setShowPinManager] = React.useState(false);
 
-  const getSecurityStatusColor = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'secure':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'critical':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'secure': return 'bg-green-500';
+      case 'warning': return 'bg-yellow-500';
+      case 'critical': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getSecurityIcon = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'secure':
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case 'warning':
-        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
-      case 'critical':
-        return <AlertTriangle className="h-5 w-5 text-red-600" />;
-      default:
-        return <Shield className="h-5 w-5 text-gray-600" />;
+      case 'secure': return <CheckCircle className="h-5 w-5" />;
+      case 'warning': return <AlertTriangle className="h-5 w-5" />;
+      case 'critical': return <Shield className="h-5 w-5" />;
+      default: return <Clock className="h-5 w-5" />;
     }
   };
 
-  const securityChecks = [
-    {
-      name: 'Account Verification',
-      status: profile?.verification_level === 'verified' ? 'complete' : 'pending',
-      description: 'Identity verification status'
-    },
-    {
-      name: 'Email Verification',
-      status: user?.email_confirmed_at ? 'complete' : 'pending',
-      description: 'Email address confirmation'
-    },
-    {
-      name: 'Two-Factor Authentication',
-      status: profile?.two_factor_enabled ? 'complete' : 'pending',
-      description: 'Additional security layer'
-    },
-    {
-      name: 'Withdrawal PIN',
-      status: 'unknown', // Would be determined by checking withdrawal_pins table
-      description: 'Secure PIN for fund withdrawals'
+  const getVerificationBadge = () => {
+    if (!profile?.verification_level) return { text: 'Unverified', variant: 'destructive' as const };
+    
+    switch (profile.verification_level) {
+      case 'basic':
+        return { text: 'Basic Verified', variant: 'secondary' as const };
+      case 'enhanced':
+        return { text: 'Enhanced Verified', variant: 'default' as const };
+      case 'premium':
+        return { text: 'Premium Verified', variant: 'default' as const };
+      default:
+        return { text: 'Unverified', variant: 'destructive' as const };
     }
-  ];
+  };
 
-  if (showPinManager) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Security Settings</h2>
-          <Button
-            variant="outline"
-            onClick={() => setShowPinManager(false)}
-          >
-            Back to Security Dashboard
-          </Button>
-        </div>
-        <SecurePinManager />
-      </div>
-    );
-  }
+  const verificationBadge = getVerificationBadge();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div>
         <h2 className="text-2xl font-bold">Security Dashboard</h2>
-        <Badge className={getSecurityStatusColor(securityStatus)}>
-          {getSecurityIcon(securityStatus)}
-          <span className="ml-2 capitalize">{securityStatus}</span>
-        </Badge>
+        <p className="text-muted-foreground">Monitor and manage your account security</p>
       </div>
 
-      {securityStatus === 'critical' && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
-            Critical security issue detected. Please review your account immediately.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {securityStatus === 'warning' && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800">
-            Security warning: Unusual activity detected. Please review your recent transactions.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Security Status */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Security Status
-            </CardTitle>
-            <CardDescription>
-              Overall security health of your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {securityChecks.map((check, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                <div>
-                  <p className="font-medium">{check.name}</p>
-                  <p className="text-sm text-muted-foreground">{check.description}</p>
-                </div>
-                <Badge 
-                  variant={check.status === 'complete' ? 'default' : 'secondary'}
-                  className={check.status === 'complete' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}
-                >
-                  {check.status === 'complete' ? 'Complete' : 'Pending'}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
-              Security Actions
-            </CardTitle>
-            <CardDescription>
-              Manage your security settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={() => setShowPinManager(true)}
-              className="w-full justify-start"
-              variant="outline"
-            >
-              <Key className="h-4 w-4 mr-2" />
-              Manage Withdrawal PIN
-            </Button>
-            
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              disabled
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              Enable Two-Factor Auth (Coming Soon)
-            </Button>
-            
-            <Button
-              className="w-full justify-start"
-              variant="outline"
-              disabled
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Complete KYC Verification (Coming Soon)
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {lastSecurityCheck && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Security Monitoring
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Security Status</CardTitle>
+            <div className={`p-2 rounded-full ${getStatusColor(securityStatus)}`}>
+              {getStatusIcon(securityStatus)}
+            </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Last security check: {lastSecurityCheck.toLocaleString()}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Continuous monitoring active for suspicious activities, unauthorized access attempts, and unusual transaction patterns.
+            <div className="text-2xl font-bold capitalize">{securityStatus}</div>
+            <p className="text-xs text-muted-foreground">
+              Last check: {lastSecurityCheck ? lastSecurityCheck.toLocaleTimeString() : 'Never'}
             </p>
           </CardContent>
         </Card>
-      )}
+
+        {/* Account Verification */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Verification Level</CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Badge variant={verificationBadge.variant}>{verificationBadge.text}</Badge>
+            <p className="text-xs text-muted-foreground mt-2">
+              Higher verification increases transaction limits
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Two-Factor Authentication */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Two-Factor Auth</CardTitle>
+            <Lock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Badge variant={profile?.two_factor_enabled ? 'default' : 'destructive'}>
+              {profile?.two_factor_enabled ? 'Enabled' : 'Disabled'}
+            </Badge>
+            <p className="text-xs text-muted-foreground mt-2">
+              Add an extra layer of security
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Security Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Security Actions
+          </CardTitle>
+          <CardDescription>
+            Take action to improve your account security
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Enable Two-Factor Authentication</p>
+              <p className="text-sm text-muted-foreground">Secure your account with 2FA</p>
+            </div>
+            <Button variant="outline" size="sm">
+              Setup 2FA
+            </Button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Review Login Activity</p>
+              <p className="text-sm text-muted-foreground">Check recent account access</p>
+            </div>
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-2" />
+              View Activity
+            </Button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Update Security Settings</p>
+              <p className="text-sm text-muted-foreground">Manage passwords and PINs</p>
+            </div>
+            <Button variant="outline" size="sm">
+              Manage
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
