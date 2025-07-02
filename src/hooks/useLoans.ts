@@ -49,7 +49,22 @@ export const useLoans = () => {
         if (providersError) {
           console.error('Error fetching loan providers:', providersError);
         } else {
-          setLoanProviders(providers || []);
+          // Transform the data to match our interface
+          const transformedProviders = providers?.map(provider => ({
+            ...provider,
+            countries_supported: Array.isArray(provider.countries_supported) 
+              ? provider.countries_supported as string[]
+              : typeof provider.countries_supported === 'string'
+              ? [provider.countries_supported]
+              : ['NG'],
+            kyc_requirements: Array.isArray(provider.kyc_requirements)
+              ? provider.kyc_requirements as string[]
+              : typeof provider.kyc_requirements === 'string'
+              ? [provider.kyc_requirements]
+              : ['national_id', 'bank_statement', 'proof_of_income']
+          })) || [];
+          
+          setLoanProviders(transformedProviders);
         }
 
         // Fetch user's loan applications if authenticated
@@ -66,7 +81,25 @@ export const useLoans = () => {
           if (applicationsError) {
             console.error('Error fetching loan applications:', applicationsError);
           } else {
-            setLoanApplications(applications || []);
+            // Transform the nested loan_providers data
+            const transformedApplications = applications?.map(app => ({
+              ...app,
+              loan_providers: {
+                ...app.loan_providers,
+                countries_supported: Array.isArray(app.loan_providers.countries_supported)
+                  ? app.loan_providers.countries_supported as string[]
+                  : typeof app.loan_providers.countries_supported === 'string'
+                  ? [app.loan_providers.countries_supported]
+                  : ['NG'],
+                kyc_requirements: Array.isArray(app.loan_providers.kyc_requirements)
+                  ? app.loan_providers.kyc_requirements as string[]
+                  : typeof app.loan_providers.kyc_requirements === 'string'
+                  ? [app.loan_providers.kyc_requirements]
+                  : ['national_id', 'bank_statement', 'proof_of_income']
+              }
+            })) || [];
+            
+            setLoanApplications(transformedApplications);
           }
         }
       } catch (error) {
@@ -104,7 +137,25 @@ export const useLoans = () => {
         .eq('user_id', profile?.id)
         .order('created_at', { ascending: false });
 
-      setLoanApplications(applications || []);
+      // Transform the data similar to above
+      const transformedApplications = applications?.map(app => ({
+        ...app,
+        loan_providers: {
+          ...app.loan_providers,
+          countries_supported: Array.isArray(app.loan_providers.countries_supported)
+            ? app.loan_providers.countries_supported as string[]
+            : typeof app.loan_providers.countries_supported === 'string'
+            ? [app.loan_providers.countries_supported]
+            : ['NG'],
+          kyc_requirements: Array.isArray(app.loan_providers.kyc_requirements)
+            ? app.loan_providers.kyc_requirements as string[]
+            : typeof app.loan_providers.kyc_requirements === 'string'
+            ? [app.loan_providers.kyc_requirements]
+            : ['national_id', 'bank_statement', 'proof_of_income']
+        }
+      })) || [];
+
+      setLoanApplications(transformedApplications);
       return data;
     } catch (error) {
       console.error('Error submitting loan application:', error);
