@@ -72,7 +72,10 @@ const KYCOnboarding = () => {
         completed: !!(profile.full_name && profile.phone_number && profile.date_of_birth && 
                      profile.address_line_1 && profile.city && profile.country_of_residence),
         required: true,
-        action: () => navigate('/profile/complete')
+        action: () => {
+          console.log('Navigating to /profile/complete');
+          navigate('/profile/complete');
+        }
       },
       {
         id: 'employment_info',
@@ -81,7 +84,10 @@ const KYCOnboarding = () => {
         icon: <Briefcase className="h-5 w-5" />,
         completed: !!(profile.occupation && profile.employer && profile.monthly_income),
         required: true,
-        action: () => navigate('/profile/complete')
+        action: () => {
+          console.log('Navigating to /profile/complete for employment');
+          navigate('/profile/complete');
+        }
       },
       {
         id: 'identity_document',
@@ -90,7 +96,10 @@ const KYCOnboarding = () => {
         icon: <FileText className="h-5 w-5" />,
         completed: isDocumentApproved('national_id') || isDocumentApproved('passport') || isDocumentApproved('drivers_license'),
         required: true,
-        action: () => navigate('/kyc/documents')
+        action: () => {
+          console.log('Navigating to /kyc/documents for identity');
+          navigate('/kyc/documents');
+        }
       },
       {
         id: 'address_proof',
@@ -99,7 +108,10 @@ const KYCOnboarding = () => {
         icon: <MapPin className="h-5 w-5" />,
         completed: isDocumentApproved('utility_bill') || isDocumentApproved('bank_statement'),
         required: true,
-        action: () => navigate('/kyc/documents')
+        action: () => {
+          console.log('Navigating to /kyc/documents for address');
+          navigate('/kyc/documents');
+        }
       },
       {
         id: 'selfie_verification',
@@ -108,7 +120,10 @@ const KYCOnboarding = () => {
         icon: <Camera className="h-5 w-5" />,
         completed: isDocumentApproved('selfie'),
         required: false,
-        action: () => navigate('/kyc/documents')
+        action: () => {
+          console.log('Navigating to /kyc/documents for selfie');
+          navigate('/kyc/documents');
+        }
       }
     ];
 
@@ -123,6 +138,16 @@ const KYCOnboarding = () => {
     // Base percentage on required steps, bonus for optional steps
     const basePercentage = (completedRequiredSteps.length / requiredSteps.length) * 80;
     const bonusPercentage = ((completedAllSteps.length - completedRequiredSteps.length) / (allSteps.length - requiredSteps.length)) * 20;
+    
+    console.log('KYCOnboarding calculation:', {
+      completedRequired: completedRequiredSteps.length,
+      totalRequired: requiredSteps.length,
+      completedOptional: completedAllSteps.length - completedRequiredSteps.length,
+      totalOptional: allSteps.length - requiredSteps.length,
+      basePercentage,
+      bonusPercentage,
+      total: Math.round(basePercentage + bonusPercentage)
+    });
     
     setCompletionPercentage(Math.round(basePercentage + bonusPercentage));
   }, [profile, kycDocuments, navigate]);

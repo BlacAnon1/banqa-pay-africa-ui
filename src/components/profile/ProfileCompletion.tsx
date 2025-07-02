@@ -72,15 +72,35 @@ const ProfileCompletion = () => {
         source_of_funds: profile.source_of_funds || '',
       });
 
-      // Calculate completion percentage based on all profile fields
-      const allFields = [
+      // Calculate completion percentage - match KYCOnboarding logic
+      const requiredFields = [
         profile.full_name, profile.phone_number, profile.date_of_birth,
-        profile.gender, profile.nationality, profile.state_province,
-        profile.city, profile.address_line_1, profile.occupation,
-        profile.employer, profile.monthly_income, profile.source_of_funds
+        profile.address_line_1, profile.city, profile.country_of_residence,
+        profile.occupation, profile.employer, profile.monthly_income
       ];
-      const completedFields = allFields.filter(field => field && field.toString().trim() !== '').length;
-      setCompletionPercentage(Math.round((completedFields / allFields.length) * 100));
+      const completedRequired = requiredFields.filter(field => field && field.toString().trim() !== '').length;
+      
+      const optionalFields = [
+        profile.gender, profile.nationality, profile.state_province,
+        profile.address_line_2, profile.postal_code, profile.source_of_funds
+      ];
+      const completedOptional = optionalFields.filter(field => field && field.toString().trim() !== '').length;
+      
+      // 80% for required fields + 20% for optional fields (same as KYCOnboarding)
+      const basePercentage = (completedRequired / requiredFields.length) * 80;
+      const bonusPercentage = (completedOptional / optionalFields.length) * 20;
+      
+      console.log('ProfileCompletion calculation:', {
+        completedRequired,
+        requiredFields: requiredFields.length,
+        completedOptional,
+        optionalFields: optionalFields.length,
+        basePercentage,
+        bonusPercentage,
+        total: Math.round(basePercentage + bonusPercentage)
+      });
+      
+      setCompletionPercentage(Math.round(basePercentage + bonusPercentage));
     }
   }, [profile]);
 
