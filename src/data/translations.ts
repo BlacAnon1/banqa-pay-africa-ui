@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     // Navigation
@@ -31,7 +30,12 @@ export const translations = {
 
     // Dashboard
     'dashboard.welcome': 'Welcome to Banqa',
+    'dashboard.subtitle': 'Your financial companion for Africa',
     'dashboard.balance': 'Balance',
+    'dashboard.addFunds': 'Add Funds',
+    'dashboard.billsPaid': 'Bills Paid',
+    'dashboard.thisMonth': 'This Month',
+    'dashboard.totalSpent': 'Total Spent',
     'dashboard.recentTransactions': 'Recent Transactions',
     'dashboard.quickActions': 'Quick Actions',
 
@@ -114,7 +118,12 @@ export const translations = {
 
     // Dashboard
     'dashboard.welcome': 'Bienvenue sur Banqa',
+    'dashboard.subtitle': 'Votre compagnon financier pour l\'Afrique',
     'dashboard.balance': 'Solde',
+    'dashboard.addFunds': 'Ajouter des fonds',
+    'dashboard.billsPaid': 'Factures payées',
+    'dashboard.thisMonth': 'Ce mois-ci',
+    'dashboard.totalSpent': 'Total dépensé',
     'dashboard.recentTransactions': 'Transactions récentes',
     'dashboard.quickActions': 'Actions rapides',
 
@@ -197,7 +206,12 @@ export const translations = {
 
     // Dashboard
     'dashboard.welcome': 'Karibu Banqa',
+    'dashboard.subtitle': 'Mwenzako wa kifedha kwa Afrika',
     'dashboard.balance': 'Salio',
+    'dashboard.addFunds': 'Ongeza Fedha',
+    'dashboard.billsPaid': 'Bili Zilizolipwa',
+    'dashboard.thisMonth': 'Mwezi Huu',
+    'dashboard.totalSpent': 'Jumla Iliyotumika',
     'dashboard.recentTransactions': 'Miamala ya Hivi Karibuni',
     'dashboard.quickActions': 'Vitendo vya Haraka',
 
@@ -280,7 +294,12 @@ export const translations = {
 
     // Dashboard
     'dashboard.welcome': 'Barka da zuwa Banqa',
+    'dashboard.subtitle': 'Abokin kasuwanci na Afirka',
     'dashboard.balance': 'Ma\'auni',
+    'dashboard.addFunds': 'Kara Kudi',
+    'dashboard.billsPaid': 'Kudaden da aka Biya',
+    'dashboard.thisMonth': 'Wannan Watan',
+    'dashboard.totalSpent': 'Jimillar da aka Kashe',
     'dashboard.recentTransactions': 'Cinikin Kwanan Nan',
     'dashboard.quickActions': 'Ayyuka masu Sauri',
 
@@ -363,7 +382,12 @@ export const translations = {
 
     // Dashboard
     'dashboard.welcome': 'Káàbọ̀ sí Banqa',
+    'dashboard.subtitle': 'Ọ̀rẹ́ owó rẹ fún Áfríkà',
     'dashboard.balance': 'Owó tí ó wà',
+    'dashboard.addFunds': 'Fi owó kún',
+    'dashboard.billsPaid': 'Àwọn ìwé tí a san',
+    'dashboard.thisMonth': 'Oṣù yìí',
+    'dashboard.totalSpent': 'Àpapọ̀ tí a ná',
     'dashboard.recentTransactions': 'Àwọn ìṣòwò tuntun',
     'dashboard.quickActions': 'Àwọn ìṣe kíákíá',
 
