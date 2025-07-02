@@ -14,14 +14,25 @@ import { NotificationCenter } from '@/components/notifications/NotificationCente
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { africanCountries } from '@/data/africanCountries';
 
-const countries = [
-  { code: 'NG', name: 'countries.nigeria', flag: '🇳🇬' },
-  { code: 'KE', name: 'countries.kenya', flag: '🇰🇪' },
-  { code: 'GH', name: 'countries.ghana', flag: '🇬🇭' },
-  { code: 'ZA', name: 'countries.southafrica', flag: '🇿🇦' },
-  { code: 'EG', name: 'countries.egypt', flag: '🇪🇬' },
-];
+// Get flag emoji for country codes
+const getCountryFlag = (countryCode: string): string => {
+  const flagEmojis: { [key: string]: string } = {
+    'DZ': '🇩🇿', 'AO': '🇦🇴', 'BJ': '🇧🇯', 'BW': '🇧🇼', 'BF': '🇧🇫',
+    'BI': '🇧🇮', 'CM': '🇨🇲', 'CV': '🇨🇻', 'CF': '🇨🇫', 'TD': '🇹🇩',
+    'KM': '🇰🇲', 'CG': '🇨🇬', 'CD': '🇨🇩', 'DJ': '🇩🇯', 'EG': '🇪🇬',
+    'GQ': '🇬🇶', 'ER': '🇪🇷', 'SZ': '🇸🇿', 'ET': '🇪🇹', 'GA': '🇬🇦',
+    'GM': '🇬🇲', 'GH': '🇬🇭', 'GN': '🇬🇳', 'GW': '🇬🇼', 'CI': '🇨🇮',
+    'KE': '🇰🇪', 'LS': '🇱🇸', 'LR': '🇱🇷', 'LY': '🇱🇾', 'MG': '🇲🇬',
+    'MW': '🇲🇼', 'ML': '🇲🇱', 'MR': '🇲🇷', 'MU': '🇲🇺', 'MA': '🇲🇦',
+    'MZ': '🇲🇿', 'NA': '🇳🇦', 'NE': '🇳🇪', 'NG': '🇳🇬', 'RW': '🇷🇼',
+    'ST': '🇸🇹', 'SN': '🇸🇳', 'SC': '🇸🇨', 'SL': '🇸🇱', 'SO': '🇸🇴',
+    'ZA': '🇿🇦', 'SS': '🇸🇸', 'SD': '🇸🇩', 'TZ': '🇹🇿', 'TG': '🇹🇬',
+    'TN': '🇹🇳', 'UG': '🇺🇬', 'ZM': '🇿🇲', 'ZW': '🇿🇼'
+  };
+  return flagEmojis[countryCode] || '🏳️';
+};
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -32,7 +43,8 @@ const languages = [
 ];
 
 export function TopBar() {
-  const [selectedCountry, setSelectedCountry] = useState(countries[0]);
+  // Start with Nigeria as default
+  const [selectedCountry, setSelectedCountry] = useState(africanCountries.find(c => c.code === 'NG') || africanCountries[0]);
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { profile } = useAuth();
@@ -48,23 +60,23 @@ export function TopBar() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Country Selector */}
+          {/* Country Selector - Now shows all African countries */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-2 border-primary/20 hover:border-primary rounded-xl">
-                <span className="text-lg">{selectedCountry.flag}</span>
-                <span className="hidden sm:inline font-medium">{t(selectedCountry.name)}</span>
+                <span className="text-lg">{getCountryFlag(selectedCountry.code)}</span>
+                <span className="hidden sm:inline font-medium">{selectedCountry.name}</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur border-primary/20 rounded-xl">
-              {countries.map((country) => (
+            <DropdownMenuContent align="end" className="w-48 bg-background/95 backdrop-blur border-primary/20 rounded-xl max-h-96 overflow-y-auto">
+              {africanCountries.map((country) => (
                 <DropdownMenuItem
                   key={country.code}
                   onClick={() => setSelectedCountry(country)}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-primary/10 cursor-pointer"
                 >
-                  <span className="text-lg">{country.flag}</span>
-                  <span className="font-medium">{t(country.name)}</span>
+                  <span className="text-lg">{getCountryFlag(country.code)}</span>
+                  <span className="font-medium">{country.name}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
