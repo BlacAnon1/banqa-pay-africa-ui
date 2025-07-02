@@ -119,6 +119,39 @@ export type Database = {
           },
         ]
       }
+      credit_scores: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          factors: Json | null
+          grade: string
+          id: string
+          last_updated: string | null
+          score: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          factors?: Json | null
+          grade: string
+          id?: string
+          last_updated?: string | null
+          score: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          factors?: Json | null
+          grade?: string
+          id?: string
+          last_updated?: string | null
+          score?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       crypto_wallets: {
         Row: {
           balance: number | null
@@ -307,6 +340,250 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_applications: {
+        Row: {
+          amount: number
+          application_data: Json | null
+          approval_date: string | null
+          created_at: string | null
+          disbursement_date: string | null
+          employment_status: string
+          id: string
+          interest_rate: number
+          monthly_income: number
+          monthly_payment: number
+          provider_id: string | null
+          provider_reference: string | null
+          purpose: string
+          rejection_reason: string | null
+          status: string | null
+          tenure_months: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          application_data?: Json | null
+          approval_date?: string | null
+          created_at?: string | null
+          disbursement_date?: string | null
+          employment_status: string
+          id?: string
+          interest_rate: number
+          monthly_income: number
+          monthly_payment: number
+          provider_id?: string | null
+          provider_reference?: string | null
+          purpose: string
+          rejection_reason?: string | null
+          status?: string | null
+          tenure_months: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          application_data?: Json | null
+          approval_date?: string | null
+          created_at?: string | null
+          disbursement_date?: string | null
+          employment_status?: string
+          id?: string
+          interest_rate?: number
+          monthly_income?: number
+          monthly_payment?: number
+          provider_id?: string | null
+          provider_reference?: string | null
+          purpose?: string
+          rejection_reason?: string | null
+          status?: string | null
+          tenure_months?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_applications_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "loan_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          loan_id: string | null
+          payment_date: string | null
+          payment_method: string | null
+          reference_number: string
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          loan_id?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          reference_number: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          loan_id?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          reference_number?: string
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_providers: {
+        Row: {
+          api_endpoint: string | null
+          api_key_required: boolean | null
+          countries_supported: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          kyc_requirements: Json | null
+          max_interest_rate: number | null
+          max_loan_amount: number | null
+          max_tenure_months: number | null
+          min_interest_rate: number | null
+          min_loan_amount: number | null
+          min_tenure_months: number | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          api_key_required?: boolean | null
+          countries_supported?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          kyc_requirements?: Json | null
+          max_interest_rate?: number | null
+          max_loan_amount?: number | null
+          max_tenure_months?: number | null
+          min_interest_rate?: number | null
+          min_loan_amount?: number | null
+          min_tenure_months?: number | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          api_key_required?: boolean | null
+          countries_supported?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          kyc_requirements?: Json | null
+          max_interest_rate?: number | null
+          max_loan_amount?: number | null
+          max_tenure_months?: number | null
+          min_interest_rate?: number | null
+          min_loan_amount?: number | null
+          min_tenure_months?: number | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          application_id: string | null
+          created_at: string | null
+          id: string
+          interest_rate: number
+          loan_end_date: string
+          loan_start_date: string
+          monthly_payment: number
+          next_payment_date: string
+          outstanding_balance: number
+          payments_made: number | null
+          principal_amount: number
+          provider_id: string | null
+          provider_loan_id: string | null
+          status: string | null
+          tenure_months: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string | null
+          id?: string
+          interest_rate: number
+          loan_end_date: string
+          loan_start_date: string
+          monthly_payment: number
+          next_payment_date: string
+          outstanding_balance: number
+          payments_made?: number | null
+          principal_amount: number
+          provider_id?: string | null
+          provider_loan_id?: string | null
+          status?: string | null
+          tenure_months: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string | null
+          id?: string
+          interest_rate?: number
+          loan_end_date?: string
+          loan_start_date?: string
+          monthly_payment?: number
+          next_payment_date?: string
+          outstanding_balance?: number
+          payments_made?: number | null
+          principal_amount?: number
+          provider_id?: string | null
+          provider_loan_id?: string | null
+          status?: string | null
+          tenure_months?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loans_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loans_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "loan_providers"
             referencedColumns: ["id"]
           },
         ]
@@ -926,6 +1203,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_credit_score: {
+        Args: { user_id_param: string }
+        Returns: {
+          score: number
+          grade: string
+        }[]
+      }
       generate_banqa_id: {
         Args: Record<PropertyKey, never>
         Returns: string

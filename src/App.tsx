@@ -21,6 +21,7 @@ import Index from "./pages/Index";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import PayBills from "./pages/PayBills";
+import Loans from "./pages/Loans";
 import History from "./pages/History";
 import Wallet from "./pages/Wallet";
 import Support from "./pages/Support";
@@ -73,6 +74,7 @@ const App = () => {
                     }>
                       <Route path="dashboard" element={<Dashboard />} />
                       <Route path="pay-bills" element={<PayBills />} />
+                      <Route path="loans" element={<Loans />} />
                       <Route path="history" element={<History />} />
                       <Route path="wallet" element={<Wallet />} />
                       <Route path="support" element={<Support />} />
@@ -83,6 +85,7 @@ const App = () => {
                     {/* Legacy /app routes for backward compatibility */}
                     <Route path="/app/dashboard" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/app/pay-bills" element={<Navigate to="/pay-bills" replace />} />
+                    <Route path="/app/loans" element={<Navigate to="/loans" replace />} />
                     <Route path="/app/history" element={<Navigate to="/history" replace />} />
                     <Route path="/app/wallet" element={<Navigate to="/wallet" replace />} />
                     <Route path="/app/support" element={<Navigate to="/support" replace />} />

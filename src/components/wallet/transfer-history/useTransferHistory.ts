@@ -40,9 +40,9 @@ export const useTransferHistory = () => {
             'email' in transfer.sender_profile &&
             'banqa_id' in transfer.sender_profile
             ? {
-                full_name: (transfer.sender_profile as any).full_name as string || 'Unknown',
-                email: (transfer.sender_profile as any).email as string || 'Unknown',
-                banqa_id: (transfer.sender_profile as any).banqa_id as string || 'Unknown'
+                full_name: transfer.sender_profile.full_name as string || 'Unknown',
+                email: transfer.sender_profile.email as string || 'Unknown',
+                banqa_id: transfer.sender_profile.banqa_id as string || 'Unknown'
               }
             : null;
 
@@ -53,9 +53,9 @@ export const useTransferHistory = () => {
             'email' in transfer.recipient_profile &&
             'banqa_id' in transfer.recipient_profile
             ? {
-                full_name: (transfer.recipient_profile as any).full_name as string || 'Unknown',
-                email: (transfer.recipient_profile as any).email as string || 'Unknown',
-                banqa_id: (transfer.recipient_profile as any).banqa_id as string || 'Unknown'
+                full_name: transfer.recipient_profile.full_name as string || 'Unknown',
+                email: transfer.recipient_profile.email as string || 'Unknown',
+                banqa_id: transfer.recipient_profile.banqa_id as string || 'Unknown'
               }
             : null;
 
