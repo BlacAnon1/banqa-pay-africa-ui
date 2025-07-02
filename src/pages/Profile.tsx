@@ -13,15 +13,17 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Set active tab based on route
+    // Set active tab based on route or navigation state
     if (location.pathname === '/profile/complete') {
       setActiveTab('complete');
     } else if (location.pathname === '/kyc/documents') {
       setActiveTab('documents');
+    } else if (location.state?.tab) {
+      setActiveTab(location.state.tab);
     } else {
       setActiveTab('overview');
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.state]);
 
   if (loading) {
     return (

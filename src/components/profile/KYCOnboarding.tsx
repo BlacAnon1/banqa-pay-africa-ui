@@ -69,8 +69,8 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.basicProfile,
         required: true,
         action: () => {
-          console.log('Navigating to /profile?tab=complete');
-          navigate('/profile/complete');
+          console.log('Navigating to /profile with complete tab');
+          navigate('/profile', { state: { tab: 'complete' } });
         }
       },
       {
@@ -81,8 +81,8 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.employment,
         required: true,
         action: () => {
-          console.log('Navigating to /profile/complete for employment');
-          navigate('/profile/complete');
+          console.log('Navigating to /profile with complete tab for employment');
+          navigate('/profile', { state: { tab: 'complete' } });
         }
       },
       {
@@ -93,8 +93,8 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.identityDoc,
         required: true,
         action: () => {
-          console.log('Navigating to /kyc/documents for identity');
-          navigate('/kyc/documents');
+          console.log('Navigating to /profile with documents tab for identity');
+          navigate('/profile', { state: { tab: 'documents' } });
         }
       },
       {
@@ -105,8 +105,8 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.addressDoc,
         required: true,
         action: () => {
-          console.log('Navigating to /kyc/documents for address');
-          navigate('/kyc/documents');
+          console.log('Navigating to /profile with documents tab for address');
+          navigate('/profile', { state: { tab: 'documents' } });
         }
       },
       {
@@ -117,8 +117,8 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.selfie,
         required: false,
         action: () => {
-          console.log('Navigating to /kyc/documents for selfie');
-          navigate('/kyc/documents');
+          console.log('Navigating to /profile with documents tab for selfie');
+          navigate('/profile', { state: { tab: 'documents' } });
         }
       }
     ];
