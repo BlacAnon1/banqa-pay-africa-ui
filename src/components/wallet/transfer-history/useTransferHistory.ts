@@ -38,6 +38,7 @@ export const useTransferHistory = () => {
           // Handle sender profile - check if it's a valid profile object
           if (transfer.sender_profile && 
               typeof transfer.sender_profile === 'object' && 
+              transfer.sender_profile !== null &&
               'full_name' in transfer.sender_profile &&
               'email' in transfer.sender_profile &&
               'banqa_id' in transfer.sender_profile) {
@@ -47,6 +48,7 @@ export const useTransferHistory = () => {
           // Handle recipient profile - check if it's a valid profile object  
           if (transfer.recipient_profile && 
               typeof transfer.recipient_profile === 'object' && 
+              transfer.recipient_profile !== null &&
               'full_name' in transfer.recipient_profile &&
               'email' in transfer.recipient_profile &&
               'banqa_id' in transfer.recipient_profile) {
