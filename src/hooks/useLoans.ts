@@ -141,6 +141,18 @@ export const useLoans = () => {
 
       console.log('useLoans: Loan application submitted successfully:', data);
 
+      // Trigger real-time loan processing
+      setTimeout(async () => {
+        try {
+          console.log('Processing loan application in background...');
+          await supabase.functions.invoke('process_loan_application', {
+            body: { application_id: data.id }
+          });
+        } catch (processError) {
+          console.error('Error processing loan application:', processError);
+        }
+      }, 2000); // Process after 2 seconds to simulate real-world delay
+
       // Refresh applications
       const { data: applications } = await supabase
         .from('loan_applications')

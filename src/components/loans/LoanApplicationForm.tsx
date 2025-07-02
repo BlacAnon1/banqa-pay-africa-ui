@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useLoans } from '@/hooks/useLoans';
+import { supabase } from '@/integrations/supabase/client';
 import { Calculator, ArrowLeft } from 'lucide-react';
 
 interface LoanProvider {
@@ -59,6 +60,32 @@ export const LoanApplicationForm = ({ provider, onBack, creditScore }: LoanAppli
     return monthlyPayment;
   };
 
+  const sendNotification = async (applicationId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send_notification', {
+        body: {
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          title: 'Loan Application Submitted',
+          body: `Your loan application for ₦${parseFloat(formData.amount).toLocaleString()} with ${provider.name} has been submitted successfully. We'll notify you once it's reviewed.`,
+          type: 'loan',
+          metadata: {
+            application_id: applicationId,
+            provider_name: provider.name,
+            amount: parseFloat(formData.amount)
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Error sending notification:', error);
+      } else {
+        console.log('Notification sent successfully:', data);
+      }
+    } catch (error) {
+      console.error('Error invoking notification function:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -67,7 +94,7 @@ export const LoanApplicationForm = ({ provider, onBack, creditScore }: LoanAppli
       const interestRate = calculateInterestRate();
       const monthlyPayment = calculateMonthlyPayment();
 
-      await submitLoanApplication({
+      const applicationData = await submitLoanApplication({
         provider_id: provider.id,
         amount: parseFloat(formData.amount),
         tenure_months: parseInt(formData.tenure_months),
@@ -77,6 +104,11 @@ export const LoanApplicationForm = ({ provider, onBack, creditScore }: LoanAppli
         employment_status: formData.employment_status,
         monthly_income: parseFloat(formData.monthly_income)
       });
+
+      // Send notification after successful application
+      if (applicationData?.id) {
+        await sendNotification(applicationData.id);
+      }
 
       toast({
         title: "Application Submitted",
@@ -256,6 +288,13 @@ export const LoanApplicationForm = ({ provider, onBack, creditScore }: LoanAppli
                 </p>
               </div>
             )}
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-900 mb-2">Real-Time Processing</h4>
+              <p className="text-sm text-blue-800">
+                This application will be submitted to {provider.name} for real-time processing. You'll receive updates on approval status within 24-48 hours.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
