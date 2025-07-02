@@ -35,27 +35,21 @@ export const useTransferHistory = () => {
           // Create properly typed profile objects or null with proper null checks
           const senderProfile = transfer.sender_profile && 
             typeof transfer.sender_profile === 'object' && 
-            transfer.sender_profile !== null &&
-            'full_name' in transfer.sender_profile &&
-            'email' in transfer.sender_profile &&
-            'banqa_id' in transfer.sender_profile
+            transfer.sender_profile !== null
             ? {
-                full_name: (transfer.sender_profile as any).full_name as string || 'Unknown',
-                email: (transfer.sender_profile as any).email as string || 'Unknown',
-                banqa_id: (transfer.sender_profile as any).banqa_id as string || 'Unknown'
+                full_name: (transfer.sender_profile as any)?.full_name as string || 'Unknown',
+                email: (transfer.sender_profile as any)?.email as string || 'Unknown',
+                banqa_id: (transfer.sender_profile as any)?.banqa_id as string || 'Unknown'
               }
             : null;
 
           const recipientProfile = transfer.recipient_profile && 
             typeof transfer.recipient_profile === 'object' && 
-            transfer.recipient_profile !== null &&
-            'full_name' in transfer.recipient_profile &&
-            'email' in transfer.recipient_profile &&
-            'banqa_id' in transfer.recipient_profile
+            transfer.recipient_profile !== null
             ? {
-                full_name: (transfer.recipient_profile as any).full_name as string || 'Unknown',
-                email: (transfer.recipient_profile as any).email as string || 'Unknown',
-                banqa_id: (transfer.recipient_profile as any).banqa_id as string || 'Unknown'
+                full_name: (transfer.recipient_profile as any)?.full_name as string || 'Unknown',
+                email: (transfer.recipient_profile as any)?.email as string || 'Unknown',
+                banqa_id: (transfer.recipient_profile as any)?.banqa_id as string || 'Unknown'
               }
             : null;
 
