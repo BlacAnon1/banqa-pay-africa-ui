@@ -39,8 +39,10 @@ export const useLoans = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('useLoans: Starting to fetch data...');
       try {
         // Fetch loan providers
+        console.log('useLoans: Fetching loan providers...');
         const { data: providers, error: providersError } = await supabase
           .from('loan_providers')
           .select('*')
@@ -49,6 +51,7 @@ export const useLoans = () => {
         if (providersError) {
           console.error('Error fetching loan providers:', providersError);
         } else {
+          console.log('useLoans: Raw providers data:', providers);
           // Transform the data to match our interface
           const transformedProviders = providers?.map(provider => ({
             ...provider,
@@ -64,11 +67,13 @@ export const useLoans = () => {
               : ['national_id', 'bank_statement', 'proof_of_income']
           })) || [];
           
+          console.log('useLoans: Transformed providers:', transformedProviders);
           setLoanProviders(transformedProviders);
         }
 
         // Fetch user's loan applications if authenticated
         if (profile?.id) {
+          console.log('useLoans: Fetching loan applications for user:', profile.id);
           const { data: applications, error: applicationsError } = await supabase
             .from('loan_applications')
             .select(`
@@ -81,30 +86,35 @@ export const useLoans = () => {
           if (applicationsError) {
             console.error('Error fetching loan applications:', applicationsError);
           } else {
+            console.log('useLoans: Raw applications data:', applications);
             // Transform the nested loan_providers data
             const transformedApplications = applications?.map(app => ({
               ...app,
               loan_providers: {
                 ...app.loan_providers,
-                countries_supported: Array.isArray(app.loan_providers.countries_supported)
+                countries_supported: Array.isArray(app.loan_providers?.countries_supported)
                   ? app.loan_providers.countries_supported as string[]
-                  : typeof app.loan_providers.countries_supported === 'string'
+                  : typeof app.loan_providers?.countries_supported === 'string'
                   ? [app.loan_providers.countries_supported]
                   : ['NG'],
-                kyc_requirements: Array.isArray(app.loan_providers.kyc_requirements)
+                kyc_requirements: Array.isArray(app.loan_providers?.kyc_requirements)
                   ? app.loan_providers.kyc_requirements as string[]
-                  : typeof app.loan_providers.kyc_requirements === 'string'
+                  : typeof app.loan_providers?.kyc_requirements === 'string'
                   ? [app.loan_providers.kyc_requirements]
                   : ['national_id', 'bank_statement', 'proof_of_income']
               }
             })) || [];
             
+            console.log('useLoans: Transformed applications:', transformedApplications);
             setLoanApplications(transformedApplications);
           }
+        } else {
+          console.log('useLoans: No user profile, skipping applications fetch');
         }
       } catch (error) {
         console.error('Error fetching loan data:', error);
       } finally {
+        console.log('useLoans: Setting loading to false');
         setLoading(false);
       }
     };
@@ -113,6 +123,7 @@ export const useLoans = () => {
   }, [profile?.id]);
 
   const submitLoanApplication = async (applicationData: any) => {
+    console.log('useLoans: Submitting loan application:', applicationData);
     try {
       const { data, error } = await supabase
         .from('loan_applications')
@@ -124,8 +135,11 @@ export const useLoans = () => {
         .single();
 
       if (error) {
+        console.error('Error submitting loan application:', error);
         throw error;
       }
+
+      console.log('useLoans: Loan application submitted successfully:', data);
 
       // Refresh applications
       const { data: applications } = await supabase
@@ -142,14 +156,14 @@ export const useLoans = () => {
         ...app,
         loan_providers: {
           ...app.loan_providers,
-          countries_supported: Array.isArray(app.loan_providers.countries_supported)
+          countries_supported: Array.isArray(app.loan_providers?.countries_supported)
             ? app.loan_providers.countries_supported as string[]
-            : typeof app.loan_providers.countries_supported === 'string'
+            : typeof app.loan_providers?.countries_supported === 'string'
             ? [app.loan_providers.countries_supported]
             : ['NG'],
-          kyc_requirements: Array.isArray(app.loan_providers.kyc_requirements)
+          kyc_requirements: Array.isArray(app.loan_providers?.kyc_requirements)
             ? app.loan_providers.kyc_requirements as string[]
-            : typeof app.loan_providers.kyc_requirements === 'string'
+            : typeof app.loan_providers?.kyc_requirements === 'string'
             ? [app.loan_providers.kyc_requirements]
             : ['national_id', 'bank_statement', 'proof_of_income']
         }
@@ -162,6 +176,8 @@ export const useLoans = () => {
       throw error;
     }
   };
+
+  console.log('useLoans: Returning data:', { loanProviders: loanProviders.length, loanApplications: loanApplications.length, loading });
 
   return {
     loanProviders,

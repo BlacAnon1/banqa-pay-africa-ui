@@ -18,7 +18,13 @@ export const useCreditScore = () => {
   const { profile } = useAuth();
 
   const fetchCreditScore = async () => {
-    if (!profile?.id) return;
+    if (!profile?.id) {
+      console.log('useCreditScore: No profile ID, skipping fetch');
+      setLoading(false);
+      return;
+    }
+
+    console.log('useCreditScore: Fetching credit score for user:', profile.id);
 
     try {
       // First, try to get existing credit score
@@ -28,12 +34,16 @@ export const useCreditScore = () => {
         .eq('user_id', profile.id)
         .maybeSingle();
 
+      console.log('useCreditScore: Existing score:', existingScore);
+
       if (existingScore && new Date(existingScore.expires_at) > new Date()) {
+        console.log('useCreditScore: Using existing valid score');
         setCreditScore(existingScore);
         setLoading(false);
         return;
       }
 
+      console.log('useCreditScore: Calculating new credit score...');
       // Calculate new credit score
       const { data: calculatedScore, error } = await supabase
         .rpc('calculate_credit_score', { user_id_param: profile.id });
@@ -44,9 +54,12 @@ export const useCreditScore = () => {
         return;
       }
 
+      console.log('useCreditScore: Calculated score result:', calculatedScore);
+
       if (calculatedScore && calculatedScore.length > 0) {
         const scoreData = calculatedScore[0];
         
+        console.log('useCreditScore: Upserting credit score:', scoreData);
         // Upsert the credit score
         const { data: upsertedScore, error: upsertError } = await supabase
           .from('credit_scores')
@@ -62,7 +75,10 @@ export const useCreditScore = () => {
           .single();
 
         if (!upsertError && upsertedScore) {
+          console.log('useCreditScore: Successfully upserted score:', upsertedScore);
           setCreditScore(upsertedScore);
+        } else {
+          console.error('useCreditScore: Error upserting score:', upsertError);
         }
       }
     } catch (error) {
@@ -75,6 +91,8 @@ export const useCreditScore = () => {
   useEffect(() => {
     fetchCreditScore();
   }, [profile?.id]);
+
+  console.log('useCreditScore: Returning data:', { creditScore, loading });
 
   return { creditScore, loading, refetch: fetchCreditScore };
 };
