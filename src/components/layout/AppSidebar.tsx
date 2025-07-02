@@ -38,6 +38,8 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const collapsed = state === 'collapsed';
 
+  console.log('AppSidebar rendering, collapsed:', collapsed, 'language context:', { t: typeof t });
+
   return (
     <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible="offcanvas">
       <SidebarHeader className="p-4">
@@ -50,7 +52,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-primary font-semibold">
-            {!collapsed && t('nav.mainMenu')}
+            {!collapsed && (t ? t('nav.mainMenu') : 'Main Menu')}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -69,7 +71,11 @@ export function AppSidebar() {
                         }`}
                       >
                         <item.icon className="h-5 w-5" />
-                        {!collapsed && <span className="font-medium">{t(item.title)}</span>}
+                        {!collapsed && (
+                          <span className="font-medium">
+                            {t ? t(item.title) : item.title.replace('nav.', '')}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -87,7 +93,11 @@ export function AppSidebar() {
           className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
-          {!collapsed && <span className="font-medium">{t('nav.logout')}</span>}
+          {!collapsed && (
+            <span className="font-medium">
+              {t ? t('nav.logout') : 'Logout'}
+            </span>
+          )}
         </Button>
       </SidebarFooter>
     </Sidebar>
