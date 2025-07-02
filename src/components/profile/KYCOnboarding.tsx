@@ -1,13 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, XCircle, FileText, User, MapPin, Briefcase, Camera } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, FileText, User, MapPin, Briefcase, Camera, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface KYCStep {
   id: string;
@@ -25,20 +26,14 @@ interface KYCDocument {
 }
 
 const KYCOnboarding = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [kycDocuments, setKycDocuments] = useState<KYCDocument[]>([]);
   const [steps, setSteps] = useState<KYCStep[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (profile) {
-      fetchKYCDocuments();
-      calculateSteps();
-    }
-  }, [profile]);
-
-  const fetchKYCDocuments = async () => {
+  const fetchKYCDocuments = useCallback(async () => {
     if (!profile?.id) return;
 
     try {
@@ -51,10 +46,15 @@ const KYCOnboarding = () => {
       setKycDocuments(data || []);
     } catch (error) {
       console.error('Error fetching KYC documents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch KYC documents. Please try again.",
+        variant: "destructive",
+      });
     }
-  };
+  }, [profile?.id]);
 
-  const calculateSteps = () => {
+  const calculateSteps = useCallback(() => {
     if (!profile) return;
 
     const hasDocument = (docType: string) => 
@@ -125,6 +125,77 @@ const KYCOnboarding = () => {
     const bonusPercentage = ((completedAllSteps.length - completedRequiredSteps.length) / (allSteps.length - requiredSteps.length)) * 20;
     
     setCompletionPercentage(Math.round(basePercentage + bonusPercentage));
+  }, [profile, kycDocuments, navigate]);
+
+  // Real-time updates for profile changes
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const profileChannel = supabase
+      .channel('profile_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profile.id}`
+        },
+        () => {
+          refreshProfile();
+        }
+      )
+      .subscribe();
+
+    const kycChannel = supabase
+      .channel('kyc_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kyc_documents',
+          filter: `user_id=eq.${profile.id}`
+        },
+        () => {
+          fetchKYCDocuments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(kycChannel);
+    };
+  }, [profile?.id, refreshProfile, fetchKYCDocuments]);
+
+  useEffect(() => {
+    if (profile) {
+      fetchKYCDocuments();
+    }
+  }, [profile, fetchKYCDocuments]);
+
+  useEffect(() => {
+    calculateSteps();
+  }, [calculateSteps]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([refreshProfile(), fetchKYCDocuments()]);
+      toast({
+        title: "Refreshed",
+        description: "Profile data has been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to refresh profile data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const getStatusIcon = (completed: boolean, required: boolean) => {
@@ -159,12 +230,26 @@ const KYCOnboarding = () => {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-emerald-600">
-            Complete Your Profile
-          </CardTitle>
-          <CardDescription>
-            Complete your KYC verification to unlock all Banqa features including loans, cards, and premium services.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold text-emerald-600">
+                Complete Your Profile
+              </CardTitle>
+              <CardDescription>
+                Complete your KYC verification to unlock all Banqa features including loans, cards, and premium services.
+              </CardDescription>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">

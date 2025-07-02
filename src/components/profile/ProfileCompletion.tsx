@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 
 const ProfileCompletion = () => {
-  const { profile, updateProfile, loading } = useAuth();
+  const { profile, updateProfile, loading, refreshProfile } = useAuth();
   const [formData, setFormData] = useState({
     gender: '',
     nationality: '',
@@ -27,6 +29,32 @@ const ProfileCompletion = () => {
 
   const [step, setStep] = useState(1);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Real-time profile updates
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const channel = supabase
+      .channel('profile_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profile.id}`
+        },
+        () => {
+          refreshProfile();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, refreshProfile]);
 
   useEffect(() => {
     if (profile) {
@@ -44,14 +72,15 @@ const ProfileCompletion = () => {
         source_of_funds: profile.source_of_funds || '',
       });
 
-      // Calculate completion percentage
-      const fields = [
+      // Calculate completion percentage based on all profile fields
+      const allFields = [
+        profile.full_name, profile.phone_number, profile.date_of_birth,
         profile.gender, profile.nationality, profile.state_province,
         profile.city, profile.address_line_1, profile.occupation,
         profile.employer, profile.monthly_income, profile.source_of_funds
       ];
-      const completedFields = fields.filter(field => field && field.toString().trim() !== '').length;
-      setCompletionPercentage((completedFields / fields.length) * 100);
+      const completedFields = allFields.filter(field => field && field.toString().trim() !== '').length;
+      setCompletionPercentage(Math.round((completedFields / allFields.length) * 100));
     }
   }, [profile]);
 
@@ -71,6 +100,7 @@ const ProfileCompletion = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     
     try {
       const updateData = {
@@ -92,6 +122,11 @@ const ProfileCompletion = () => {
           title: "Profile updated",
           description: "Your profile has been successfully updated.",
         });
+        
+        // Auto-advance step if this was successful and we're not on the last step
+        if (step < 3) {
+          setStep(step + 1);
+        }
       }
     } catch (error) {
       toast({
@@ -99,6 +134,21 @@ const ProfileCompletion = () => {
         description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isStepComplete = (stepNumber: number) => {
+    switch (stepNumber) {
+      case 1:
+        return !!(formData.gender && formData.nationality);
+      case 2:
+        return !!(formData.state_province && formData.city && formData.address_line_1);
+      case 3:
+        return !!(formData.occupation && formData.employer && formData.monthly_income && formData.source_of_funds);
+      default:
+        return false;
     }
   };
 
@@ -109,14 +159,29 @@ const ProfileCompletion = () => {
     <div className="max-w-2xl mx-auto p-6">
       <Card>
         <CardHeader>
-          <CardTitle>Complete Your Profile</CardTitle>
-          <CardDescription>
-            Complete your profile to access all Banqa features including cards, accounts, and crypto services.
-          </CardDescription>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                Complete Your Profile
+                {completionPercentage === 100 && <CheckCircle className="h-5 w-5 text-green-500" />}
+              </CardTitle>
+              <CardDescription>
+                Complete your profile to access all Banqa features including cards, accounts, and crypto services.
+              </CardDescription>
+            </div>
+            {completionPercentage >= 80 && (
+              <div className="flex items-center gap-2 text-green-600 text-sm">
+                <CheckCircle className="h-4 w-4" />
+                Profile Complete
+              </div>
+            )}
+          </div>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Profile Completion</span>
-              <span>{Math.round(completionPercentage)}%</span>
+              <span className={completionPercentage >= 80 ? 'text-green-600 font-semibold' : ''}>
+                {Math.round(completionPercentage)}%
+              </span>
             </div>
             <Progress value={completionPercentage} className="h-2" />
           </div>
@@ -125,7 +190,10 @@ const ProfileCompletion = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {step === 1 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Personal Information</h3>
+                  {isStepComplete(1) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -163,7 +231,10 @@ const ProfileCompletion = () => {
 
             {step === 2 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Address Information</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Address Information</h3>
+                  {isStepComplete(2) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -235,7 +306,10 @@ const ProfileCompletion = () => {
 
             {step === 3 && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Employment & Financial Information</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Employment & Financial Information</h3>
+                  {isStepComplete(3) && <CheckCircle className="h-5 w-5 text-green-500" />}
+                </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="occupation">Occupation</Label>
@@ -292,8 +366,8 @@ const ProfileCompletion = () => {
                   <Button type="button" onClick={prevStep} variant="outline" className="flex-1">
                     Back
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={loading}>
-                    {loading ? 'Updating...' : 'Update Profile'}
+                  <Button type="submit" className="flex-1" disabled={loading || isSaving}>
+                    {(loading || isSaving) ? 'Updating...' : 'Update Profile'}
                   </Button>
                 </div>
               </div>
