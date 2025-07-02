@@ -5,8 +5,8 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { Toaster } from '@/components/ui/toaster';
-import ErrorBoundary from '@/components/ErrorBoundary';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import AppLayout from '@/components/layout/AppLayout';
 
 // Page imports
