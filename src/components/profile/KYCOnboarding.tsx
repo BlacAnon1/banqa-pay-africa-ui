@@ -69,7 +69,7 @@ const KYCOnboarding = () => {
         completed: stepsCompletion.basicProfile,
         required: true,
         action: () => {
-          console.log('Navigating to /profile/complete');
+          console.log('Navigating to /profile?tab=complete');
           navigate('/profile/complete');
         }
       },

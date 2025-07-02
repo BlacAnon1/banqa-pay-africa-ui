@@ -1,13 +1,27 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import KYCOnboarding from '@/components/profile/KYCOnboarding';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProfileCompletion from '@/components/profile/ProfileCompletion';
 import DocumentUpload from '@/components/kyc/DocumentUpload';
+import { useLocation } from 'react-router-dom';
 
 const Profile = () => {
   const { profile, loading } = useAuth();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    // Set active tab based on route
+    if (location.pathname === '/profile/complete') {
+      setActiveTab('complete');
+    } else if (location.pathname === '/kyc/documents') {
+      setActiveTab('documents');
+    } else {
+      setActiveTab('overview');
+    }
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -31,13 +45,19 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Profile Overview</TabsTrigger>
-            <TabsTrigger value="complete">Complete Profile</TabsTrigger>
-            <TabsTrigger value="documents">KYC Documents</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-muted">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+              Profile Overview
+            </TabsTrigger>
+            <TabsTrigger value="complete" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+              Complete Profile
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="data-[state=active]:bg-background data-[state=active]:text-foreground">
+              KYC Documents
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
