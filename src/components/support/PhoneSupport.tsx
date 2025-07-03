@@ -64,7 +64,7 @@ export const PhoneSupport = () => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${isBusinessHours() ? 'bg-green-500' : 'bg-yellow-500'}`} />
+              <div className={`w-3 h-3 rounded-full ${isBusinessHours() ? 'bg-primary' : 'bg-accent'}`} />
               <div>
                 <p className="font-medium">
                   {isBusinessHours() ? 'We\'re Available Now' : 'Currently Closed'}
@@ -98,7 +98,7 @@ export const PhoneSupport = () => {
                 <Button
                   onClick={() => handleCall(support.number)}
                   disabled={callStatus === 'calling'}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                 >
                   <Phone className="h-4 w-4 mr-2" />
                   {callStatus === 'calling' ? 'Calling...' : 'Call Now'}
@@ -139,7 +139,7 @@ export const PhoneSupport = () => {
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-blue-600" />
+            <Users className="h-5 w-5 text-secondary" />
             <div>
               <p className="font-medium">Average Wait Time</p>
               <p className="text-sm text-muted-foreground">

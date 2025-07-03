@@ -12,13 +12,13 @@ export const QuickContactCards = ({ onStartChat }: QuickContactCardsProps) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="text-center">
-          <MessageSquare className="h-8 w-8 mx-auto text-emerald-600 mb-2" />
+          <MessageSquare className="h-8 w-8 mx-auto text-primary mb-2" />
           <CardTitle className="text-lg">Live Chat</CardTitle>
           <CardDescription>Chat with our support team</CardDescription>
         </CardHeader>
         <CardContent>
           <Button 
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={onStartChat}
           >
             Start Chat
@@ -31,7 +31,7 @@ export const QuickContactCards = ({ onStartChat }: QuickContactCardsProps) => {
 
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="text-center">
-          <Phone className="h-8 w-8 mx-auto text-blue-600 mb-2" />
+          <Phone className="h-8 w-8 mx-auto text-secondary mb-2" />
           <CardTitle className="text-lg">Phone Support</CardTitle>
           <CardDescription>Call our support hotline</CardDescription>
         </CardHeader>
@@ -51,7 +51,7 @@ export const QuickContactCards = ({ onStartChat }: QuickContactCardsProps) => {
 
       <Card className="hover:shadow-md transition-shadow">
         <CardHeader className="text-center">
-          <Mail className="h-8 w-8 mx-auto text-purple-600 mb-2" />
+          <Mail className="h-8 w-8 mx-auto text-accent mb-2" />
           <CardTitle className="text-lg">Email Support</CardTitle>
           <CardDescription>Send us an email</CardDescription>
         </CardHeader>

@@ -19,6 +19,7 @@
     /* African-inspired primary - Rich Emerald Green */
     --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 160 84% 55%;
 
     /* Warm earth tones for secondary */
     --secondary: 25 75% 47%;
@@ -33,6 +34,15 @@
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    
+    --success: 120 84% 39%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 47%;
+    --warning-foreground: 0 0% 100%;
+    
+    --info: 200 98% 39%;
+    --info-foreground: 0 0% 100%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
@@ -68,6 +78,7 @@
 
     --primary: 160 84% 45%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 160 84% 60%;
 
     --secondary: 25 75% 35%;
     --secondary-foreground: 210 40% 98%;
@@ -80,6 +91,15 @@
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    
+    --success: 120 84% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 52%;
+    --warning-foreground: 0 0% 100%;
+    
+    --info: 200 98% 45%;
+    --info-foreground: 0 0% 100%;
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;

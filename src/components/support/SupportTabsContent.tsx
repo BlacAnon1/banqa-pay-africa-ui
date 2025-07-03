@@ -22,14 +22,14 @@ export const SupportTabsContent = ({ onStartChat }: SupportTabsContentProps) => 
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <MessageSquare className="h-16 w-16 mx-auto text-emerald-600 mb-4" />
+            <MessageSquare className="h-16 w-16 mx-auto text-primary mb-4" />
             <h3 className="text-xl font-semibold mb-2">Start a Live Chat</h3>
             <p className="text-muted-foreground mb-4">
               Connect with our support team for instant assistance
             </p>
             <Button 
               onClick={onStartChat}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Open Chat Window
             </Button>

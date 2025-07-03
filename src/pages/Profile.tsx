@@ -29,10 +29,10 @@ const Profile = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">B</span>
+          <div className="w-16 h-16 banqa-gradient rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-primary-foreground font-bold text-2xl">B</span>
           </div>
-          <p className="text-emerald-600">Loading profile...</p>
+          <p className="text-primary">Loading profile...</p>
         </div>
       </div>
     );
@@ -41,7 +41,7 @@ const Profile = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">Please log in to view your profile.</p>
+        <p className="text-destructive">Please log in to view your profile.</p>
       </div>
     );
   }

@@ -78,7 +78,7 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
 
   return (
     <Card className="fixed bottom-4 right-4 w-80 h-96 z-50 shadow-2xl border-2">
-      <CardHeader className="bg-emerald-600 text-white p-3 rounded-t-lg">
+      <CardHeader className="bg-primary text-primary-foreground p-3 rounded-t-lg">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
@@ -89,7 +89,7 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
               variant="ghost"
               size="sm"
               onClick={onToggle}
-              className="h-6 w-6 p-0 text-white hover:bg-emerald-700"
+              className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary/80"
             >
               <Minimize2 className="h-3 w-3" />
             </Button>
@@ -97,14 +97,14 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
               variant="ghost"
               size="sm"
               onClick={onToggle}
-              className="h-6 w-6 p-0 text-white hover:bg-emerald-700"
+              className="h-6 w-6 p-0 text-primary-foreground hover:bg-primary/80"
             >
               <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400'}`} />
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-primary' : 'bg-accent'}`} />
           {isConnected ? 'Connected' : 'Connecting...'}
         </div>
       </CardHeader>
@@ -120,8 +120,8 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
                 <div
                   className={`max-w-[80%] rounded-lg p-2 text-sm ${
                     message.sender === 'user'
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
                   }`}
                 >
                   <p>{message.text}</p>
@@ -133,11 +133,11 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2 text-sm">
+                <div className="bg-muted rounded-lg p-2 text-sm">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
@@ -159,7 +159,7 @@ export const LiveChatWidget = ({ isOpen, onToggle }: LiveChatWidgetProps) => {
               onClick={sendMessage}
               disabled={!newMessage.trim() || !isConnected}
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               <Send className="h-4 w-4" />
             </Button>
