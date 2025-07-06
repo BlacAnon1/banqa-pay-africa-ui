@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AfricanLogo } from '@/components/ui/AfricanLogo';
+import { ModernBanqaLogo } from '@/components/ui/ModernBanqaLogo';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -55,7 +55,7 @@ export function TopBar() {
         <div className="flex items-center gap-4">
           <SidebarTrigger className="hover:bg-primary/10 hover:text-primary rounded-lg transition-colors" />
           <div className="md:hidden">
-            <AfricanLogo size="sm" variant="icon" />
+            <ModernBanqaLogo size="sm" variant="icon" />
           </div>
         </div>
 

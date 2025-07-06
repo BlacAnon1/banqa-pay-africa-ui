@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut, User, HelpCircle } from 'lucide-react';
 import {
@@ -14,8 +13,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { BanqaLogo } from '@/components/ui/BanqaLogo';
-import { AfricanLogo } from '@/components/ui/AfricanLogo';
+import { ModernBanqaLogo } from '@/components/ui/ModernBanqaLogo';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -67,7 +65,7 @@ export function AppSidebar() {
   return (
     <Sidebar className={collapsed ? 'w-14' : 'w-64'} collapsible="offcanvas">
       <SidebarHeader className="p-4">
-        <AfricanLogo 
+        <ModernBanqaLogo 
           size={collapsed ? 'sm' : 'md'} 
           variant={collapsed ? 'icon' : 'full'} 
         />
