@@ -1,5 +1,6 @@
+
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut, Banknote, TrendingUp, User, HelpCircle } from 'lucide-react';
+import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut, User, HelpCircle } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -34,11 +35,6 @@ const navigationItems = [
     title: "nav.wallet",
     url: "/wallet",
     icon: Wallet,
-  },
-  {
-    title: "nav.loans",
-    url: "/loans",
-    icon: TrendingUp,
   },
   {
     title: "nav.profile",

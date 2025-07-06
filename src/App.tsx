@@ -19,7 +19,6 @@ import Dashboard from '@/pages/Dashboard';
 import PayBills from '@/pages/PayBills';
 import Wallet from '@/pages/Wallet';
 import History from '@/pages/History';
-import Loans from '@/pages/Loans';
 import Support from '@/pages/Support';
 import ContactUs from '@/pages/ContactUs';
 import TermsOfService from '@/pages/TermsOfService';
@@ -83,13 +82,6 @@ function App() {
                       <ProtectedRoute>
                         <AppLayout>
                           <History />
-                        </AppLayout>
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/loans" element={
-                      <ProtectedRoute>
-                        <AppLayout>
-                          <Loans />
                         </AppLayout>
                       </ProtectedRoute>
                     } />
