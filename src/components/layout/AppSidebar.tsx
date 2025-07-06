@@ -1,5 +1,6 @@
+
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut, User, HelpCircle } from 'lucide-react';
+import { Home, CreditCard, History, Wallet, HeadphonesIcon, LogOut, User, HelpCircle, Sparkles } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -33,6 +34,11 @@ const navigationItems = [
     title: "nav.wallet",
     url: "/wallet",
     icon: Wallet,
+  },
+  {
+    title: "Advanced Features",
+    url: "/advanced",
+    icon: Sparkles,
   },
   {
     title: "nav.profile",
@@ -95,7 +101,7 @@ export function AppSidebar() {
                         <item.icon className="h-5 w-5" />
                         {!collapsed && (
                           <span className="font-medium">
-                            {t ? t(item.title) : item.title.replace('nav.', '')}
+                            {item.title.startsWith('nav.') ? (t ? t(item.title) : item.title.replace('nav.', '')) : item.title}
                           </span>
                         )}
                       </NavLink>

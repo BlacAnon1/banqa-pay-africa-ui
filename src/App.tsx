@@ -18,6 +18,7 @@ import VerifyOTP from '@/pages/auth/VerifyOTP';
 import Dashboard from '@/pages/Dashboard';
 import PayBills from '@/pages/PayBills';
 import Wallet from '@/pages/Wallet';
+import Advanced from '@/pages/Advanced';
 import History from '@/pages/History';
 import Support from '@/pages/Support';
 import ContactUs from '@/pages/ContactUs';
@@ -75,6 +76,13 @@ function App() {
                       <ProtectedRoute>
                         <AppLayout>
                           <Wallet />
+                        </AppLayout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/advanced" element={
+                      <ProtectedRoute>
+                        <AppLayout>
+                          <Advanced />
                         </AppLayout>
                       </ProtectedRoute>
                     } />
