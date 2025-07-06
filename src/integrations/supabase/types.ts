@@ -48,6 +48,139 @@ export type Database = {
         }
         Relationships: []
       }
+      bill_forecasts: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          due_date: string
+          factors: Json | null
+          id: string
+          predicted_amount: number
+          provider_name: string
+          service_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          due_date: string
+          factors?: Json | null
+          id?: string
+          predicted_amount: number
+          provider_name: string
+          service_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          due_date?: string
+          factors?: Json | null
+          id?: string
+          predicted_amount?: number
+          provider_name?: string
+          service_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      bill_share_participants: {
+        Row: {
+          assigned_amount: number
+          banqa_id: string | null
+          bill_share_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          paid_at: string | null
+          payment_status: string | null
+          phone_number: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_amount: number
+          banqa_id?: string | null
+          bill_share_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_status?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_amount?: number
+          banqa_id?: string | null
+          bill_share_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_status?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_share_participants_bill_share_id_fkey"
+            columns: ["bill_share_id"]
+            isOneToOne: false
+            referencedRelation: "bill_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_shares: {
+        Row: {
+          bill_description: string
+          created_at: string
+          creator_id: string
+          due_date: string | null
+          id: string
+          status: string | null
+          total_amount: number
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bill_description: string
+          created_at?: string
+          creator_id: string
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          total_amount: number
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bill_description?: string
+          created_at?: string
+          creator_id?: string
+          due_date?: string | null
+          id?: string
+          status?: string | null
+          total_amount?: number
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_shares_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cards: {
         Row: {
           card_number: string
@@ -642,6 +775,51 @@ export type Database = {
         }
         Relationships: []
       }
+      multi_country_wallets: {
+        Row: {
+          balance: number
+          country_code: string
+          country_name: string
+          created_at: string
+          currency_code: string
+          currency_symbol: string
+          exchange_rate: number
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          country_code: string
+          country_name: string
+          created_at?: string
+          currency_code: string
+          currency_symbol: string
+          exchange_rate?: number
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          country_code?: string
+          country_name?: string
+          created_at?: string
+          currency_code?: string
+          currency_symbol?: string
+          exchange_rate?: number
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
@@ -839,6 +1017,75 @@ export type Database = {
           },
         ]
       }
+      reward_items: {
+        Row: {
+          category: string
+          cost_points: number
+          country_restrictions: Json | null
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+          value_amount: number | null
+        }
+        Insert: {
+          category: string
+          cost_points: number
+          country_restrictions?: Json | null
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+          value_amount?: number | null
+        }
+        Update: {
+          category?: string
+          cost_points?: number
+          country_restrictions?: Json | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+          value_amount?: number | null
+        }
+        Relationships: []
+      }
+      reward_transactions: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          points: number
+          reference_transaction_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          points: number
+          reference_transaction_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          points?: number
+          reference_transaction_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           api_endpoint: string | null
@@ -964,6 +1211,42 @@ export type Database = {
           },
         ]
       }
+      user_insights: {
+        Row: {
+          amount_spent: number
+          created_at: string
+          id: string
+          month_year: string
+          service_type: string
+          updated_at: string
+          usage_type: string | null
+          usage_units: number | null
+          user_id: string
+        }
+        Insert: {
+          amount_spent?: number
+          created_at?: string
+          id?: string
+          month_year: string
+          service_type: string
+          updated_at?: string
+          usage_type?: string | null
+          usage_units?: number | null
+          user_id: string
+        }
+        Update: {
+          amount_spent?: number
+          created_at?: string
+          id?: string
+          month_year?: string
+          service_type?: string
+          updated_at?: string
+          usage_type?: string | null
+          usage_units?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_quick_pay_preferences: {
         Row: {
           created_at: string
@@ -998,6 +1281,42 @@ export type Database = {
           service_icon?: string
           service_name?: string
           service_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_rewards: {
+        Row: {
+          created_at: string
+          current_tier: string
+          id: string
+          lifetime_points: number
+          redeemed_points: number
+          tier_progress: number
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_tier?: string
+          id?: string
+          lifetime_points?: number
+          redeemed_points?: number
+          tier_progress?: number
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_tier?: string
+          id?: string
+          lifetime_points?: number
+          redeemed_points?: number
+          tier_progress?: number
+          total_points?: number
           updated_at?: string
           user_id?: string
         }
@@ -1055,6 +1374,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      virtual_cards: {
+        Row: {
+          auto_topup_amount: number | null
+          auto_topup_enabled: boolean | null
+          auto_topup_threshold: number | null
+          balance: number
+          card_name: string
+          card_number_encrypted: string
+          created_at: string
+          cvv_encrypted: string
+          daily_limit: number
+          expiry_month: number
+          expiry_year: number
+          id: string
+          is_active: boolean | null
+          masked_card_number: string
+          monthly_limit: number
+          spending_limit: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_topup_amount?: number | null
+          auto_topup_enabled?: boolean | null
+          auto_topup_threshold?: number | null
+          balance?: number
+          card_name: string
+          card_number_encrypted: string
+          created_at?: string
+          cvv_encrypted: string
+          daily_limit?: number
+          expiry_month: number
+          expiry_year: number
+          id?: string
+          is_active?: boolean | null
+          masked_card_number: string
+          monthly_limit?: number
+          spending_limit?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_topup_amount?: number | null
+          auto_topup_enabled?: boolean | null
+          auto_topup_threshold?: number | null
+          balance?: number
+          card_name?: string
+          card_number_encrypted?: string
+          created_at?: string
+          cvv_encrypted?: string
+          daily_limit?: number
+          expiry_month?: number
+          expiry_year?: number
+          id?: string
+          is_active?: boolean | null
+          masked_card_number?: string
+          monthly_limit?: number
+          spending_limit?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       wallets: {
         Row: {
@@ -1210,6 +1592,10 @@ export type Database = {
           grade: string
         }[]
       }
+      calculate_reward_points: {
+        Args: { amount: number; transaction_type: string }
+        Returns: number
+      }
       generate_banqa_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1217,6 +1603,10 @@ export type Database = {
       update_currency_exchange_rate: {
         Args: { currency_code: string; new_rate: number }
         Returns: boolean
+      }
+      update_user_tier: {
+        Args: { user_id_param: string }
+        Returns: string
       }
     }
     Enums: {

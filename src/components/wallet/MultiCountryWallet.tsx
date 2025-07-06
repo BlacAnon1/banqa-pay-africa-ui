@@ -1,25 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Wallet, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { africanCountries } from '@/data/africanCountries';
-import { toast } from '@/hooks/use-toast';
-
-interface CountryWallet {
-  id: string;
-  country: string;
-  countryCode: string;
-  currency: string;
-  symbol: string;
-  balance: number;
-  isDefault: boolean;
-  exchangeRate: number;
-  flag: string;
-}
+import { useMultiCountryWallets } from '@/hooks/useMultiCountryWallets';
 
 const currencyMap: { [key: string]: { symbol: string; name: string } } = {
   NGN: { symbol: '₦', name: 'Nigerian Naira' },
@@ -29,116 +16,23 @@ const currencyMap: { [key: string]: { symbol: string; name: string } } = {
   EGP: { symbol: 'E£', name: 'Egyptian Pound' },
   MAD: { symbol: 'DH', name: 'Moroccan Dirham' },
   TND: { symbol: 'DT', name: 'Tunisian Dinar' },
-  // Add more currencies as needed
+  DZD: { symbol: 'DA', name: 'Algerian Dinar' },
+  ETB: { symbol: 'Br', name: 'Ethiopian Birr' },
+  UGX: { symbol: 'USh', name: 'Ugandan Shilling' },
+  TZS: { symbol: 'TSh', name: 'Tanzanian Shilling' },
+  RWF: { symbol: 'FRw', name: 'Rwandan Franc' }
 };
 
 export const MultiCountryWallet: React.FC = () => {
-  const [wallets, setWallets] = useState<CountryWallet[]>([]);
+  const { wallets, loading, addWallet } = useMultiCountryWallets();
   const [showBalances, setShowBalances] = useState(true);
   const [selectedCountry, setSelectedCountry] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadWallets();
-  }, []);
-
-  const loadWallets = async () => {
-    // Simulate loading wallets
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockWallets: CountryWallet[] = [
-      {
-        id: '1',
-        country: 'Nigeria',
-        countryCode: 'NG',
-        currency: 'NGN',
-        symbol: '₦',
-        balance: 125000,
-        isDefault: true,
-        exchangeRate: 1,
-        flag: '🇳🇬'
-      },
-      {
-        id: '2',
-        country: 'Ghana',
-        countryCode: 'GH',
-        currency: 'GHS',
-        symbol: '₵',
-        balance: 450,
-        isDefault: false,
-        exchangeRate: 12.5,
-        flag: '🇬🇭'
-      },
-      {
-        id: '3',
-        country: 'Kenya',
-        countryCode: 'KE',
-        currency: 'KES',
-        symbol: 'KSh',
-        balance: 8500,
-        isDefault: false,
-        exchangeRate: 0.57,
-        flag: '🇰🇪'
-      }
-    ];
-    
-    setWallets(mockWallets);
-    setLoading(false);
-  };
-
-  const addNewWallet = async () => {
-    if (!selectedCountry) {
-      toast({
-        title: "Select Country",
-        description: "Please select a country to add a new wallet",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const country = africanCountries.find(c => c.code === selectedCountry);
-    if (!country) return;
-
-    // Check if wallet already exists
-    if (wallets.some(w => w.countryCode === selectedCountry)) {
-      toast({
-        title: "Wallet Exists",
-        description: `You already have a wallet for ${country.name}`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Get currency info (you'd typically get this from an API)
-    const currencyCode = getCurrencyForCountry(selectedCountry);
-    const currencyInfo = currencyMap[currencyCode] || { symbol: currencyCode, name: currencyCode };
-
-    const newWallet: CountryWallet = {
-      id: Date.now().toString(),
-      country: country.name,
-      countryCode: selectedCountry,
-      currency: currencyCode,
-      symbol: currencyInfo.symbol,
-      balance: 0,
-      isDefault: false,
-      exchangeRate: Math.random() * 2 + 0.5, // Mock exchange rate
-      flag: getCountryFlag(selectedCountry)
-    };
-
-    setWallets([...wallets, newWallet]);
-    setSelectedCountry('');
-    
-    toast({
-      title: "Wallet Added",
-      description: `${country.name} wallet created successfully`
-    });
-  };
 
   const getCurrencyForCountry = (countryCode: string): string => {
     const currencyMapping: { [key: string]: string } = {
       'NG': 'NGN', 'GH': 'GHS', 'KE': 'KES', 'ZA': 'ZAR',
-      'EG': 'EGP', 'MA': 'MAD', 'TN': 'TND',
-      // Add more mappings as needed
+      'EG': 'EGP', 'MA': 'MAD', 'TN': 'TND', 'DZ': 'DZD',
+      'ET': 'ETB', 'UG': 'UGX', 'TZ': 'TZS', 'RW': 'RWF'
     };
     return currencyMapping[countryCode] || 'USD';
   };
@@ -146,8 +40,8 @@ export const MultiCountryWallet: React.FC = () => {
   const getCountryFlag = (countryCode: string): string => {
     const flagEmojis: { [key: string]: string } = {
       'NG': '🇳🇬', 'GH': '🇬🇭', 'KE': '🇰🇪', 'ZA': '🇿🇦',
-      'EG': '🇪🇬', 'MA': '🇲🇦', 'TN': '🇹🇳',
-      // Add more flags as needed
+      'EG': '🇪🇬', 'MA': '🇲🇦', 'TN': '🇹🇳', 'DZ': '🇩🇿',
+      'ET': '🇪🇹', 'UG': '🇺🇬', 'TZ': '🇹🇿', 'RW': '🇷🇼'
     };
     return flagEmojis[countryCode] || '🏳️';
   };
@@ -156,6 +50,19 @@ export const MultiCountryWallet: React.FC = () => {
     return wallets.reduce((total, wallet) => {
       return total + (wallet.balance * wallet.exchangeRate);
     }, 0);
+  };
+
+  const handleAddWallet = async () => {
+    if (!selectedCountry) return;
+
+    const country = africanCountries.find(c => c.code === selectedCountry);
+    if (!country) return;
+
+    const currencyCode = getCurrencyForCountry(selectedCountry);
+    const currencyInfo = currencyMap[currencyCode] || { symbol: currencyCode, name: currencyCode };
+
+    await addWallet(selectedCountry, country.name, currencyCode, currencyInfo.symbol);
+    setSelectedCountry('');
   };
 
   if (loading) {
@@ -188,67 +95,81 @@ export const MultiCountryWallet: React.FC = () => {
         </Button>
       </div>
 
-      {/* Total Balance Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
-            Total Balance (NGN Equivalent)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl font-bold">
-            {showBalances ? `₦${getTotalBalanceInNGN().toLocaleString()}` : '****'}
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Across {wallets.length} {wallets.length === 1 ? 'wallet' : 'wallets'}
-          </p>
-        </CardContent>
-      </Card>
+      {wallets.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              Total Balance (NGN Equivalent)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">
+              {showBalances ? `₦${getTotalBalanceInNGN().toLocaleString()}` : '****'}
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Across {wallets.length} {wallets.length === 1 ? 'wallet' : 'wallets'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Individual Wallets */}
-      <div className="grid gap-4">
-        {wallets.map((wallet) => (
-          <Card key={wallet.id} className={wallet.isDefault ? 'ring-2 ring-primary' : ''}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{wallet.flag}</span>
+      {wallets.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No wallets yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first multi-country wallet to get started.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4">
+          {wallets.map((wallet) => (
+            <Card key={wallet.id} className={wallet.isDefault ? 'ring-2 ring-primary' : ''}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{wallet.flag}</span>
+                    <div>
+                      <CardTitle className="text-lg">{wallet.country}</CardTitle>
+                      <CardDescription>{wallet.currency}</CardDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {wallet.isDefault && <Badge variant="secondary">Default</Badge>}
+                    <Button variant="outline" size="sm">
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">{wallet.country}</CardTitle>
-                    <CardDescription>{wallet.currency}</CardDescription>
+                    <div className="text-2xl font-bold">
+                      {showBalances 
+                        ? `${wallet.symbol}${wallet.balance.toLocaleString()}` 
+                        : '****'
+                      }
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      ≈ ₦{showBalances ? (wallet.balance * wallet.exchangeRate).toLocaleString() : '****'}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Add Funds</Button>
+                    <Button variant="outline" size="sm">Convert</Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {wallet.isDefault && <Badge variant="secondary">Default</Badge>}
-                  <Button variant="outline" size="sm">
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold">
-                    {showBalances 
-                      ? `${wallet.symbol}${wallet.balance.toLocaleString()}` 
-                      : '****'
-                    }
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    ≈ ₦{showBalances ? (wallet.balance * wallet.exchangeRate).toLocaleString() : '****'}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Add Funds</Button>
-                  <Button variant="outline" size="sm">Convert</Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Add New Wallet */}
       <Card>
@@ -280,7 +201,7 @@ export const MultiCountryWallet: React.FC = () => {
                   ))}
               </SelectContent>
             </Select>
-            <Button onClick={addNewWallet} disabled={!selectedCountry}>
+            <Button onClick={handleAddWallet} disabled={!selectedCountry}>
               Add Wallet
             </Button>
           </div>

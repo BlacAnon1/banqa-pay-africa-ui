@@ -1,149 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Gift, Smartphone, Zap, Heart, Trophy, Crown, Gem } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-
-interface RewardItem {
-  id: string;
-  name: string;
-  description: string;
-  cost: number;
-  category: 'airtime' | 'bills' | 'donations' | 'vouchers';
-  icon: React.ReactNode;
-  available: boolean;
-}
-
-interface UserRewards {
-  totalPoints: number;
-  currentTier: string;
-  pointsToNextTier: number;
-  lifetimePoints: number;
-  redeemedPoints: number;
-}
-
-interface Transaction {
-  id: string;
-  type: 'earned' | 'redeemed';
-  points: number;
-  description: string;
-  date: string;
-}
+import { useRewardsSystem } from '@/hooks/useRewardsSystem';
 
 export const RewardsSystem: React.FC = () => {
-  const [userRewards, setUserRewards] = useState<UserRewards>({
-    totalPoints: 2847,
-    currentTier: 'Gold',
-    pointsToNextTier: 1153,
-    lifetimePoints: 12450,
-    redeemedPoints: 3680
-  });
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const rewardItems: RewardItem[] = [
-    {
-      id: '1',
-      name: 'Airtime ₦500',
-      description: 'Mobile airtime for any network',
-      cost: 250,
-      category: 'airtime',
-      icon: <Smartphone className="h-5 w-5" />,
-      available: true
-    },
-    {
-      id: '2',
-      name: 'Airtime ₦1000',
-      description: 'Mobile airtime for any network',
-      cost: 450,
-      category: 'airtime',
-      icon: <Smartphone className="h-5 w-5" />,
-      available: true
-    },
-    {
-      id: '3',
-      name: '5% Bill Discount',
-      description: 'Discount on your next utility bill',
-      cost: 800,
-      category: 'bills',
-      icon: <Zap className="h-5 w-5" />,
-      available: true
-    },
-    {
-      id: '4',
-      name: '10% Bill Discount',
-      description: 'Discount on your next utility bill',
-      cost: 1500,
-      category: 'bills',
-      icon: <Zap className="h-5 w-5" />,
-      available: true
-    },
-    {
-      id: '5',
-      name: 'Education Donation ₦2000',
-      description: 'Donate to children\'s education programs',
-      cost: 1000,
-      category: 'donations',
-      icon: <Heart className="h-5 w-5" />,
-      available: true
-    },
-    {
-      id: '6',
-      name: 'Healthcare Donation ₦5000',
-      description: 'Support community healthcare initiatives',
-      cost: 2500,
-      category: 'donations',
-      icon: <Heart className="h-5 w-5" />,
-      available: true
-    }
-  ];
-
-  useEffect(() => {
-    loadTransactions();
-  }, []);
-
-  const loadTransactions = async () => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockTransactions: Transaction[] = [
-      {
-        id: '1',
-        type: 'earned',
-        points: 25,
-        description: 'Electricity bill payment',
-        date: '2024-01-15'
-      },
-      {
-        id: '2',
-        type: 'earned',
-        points: 15,
-        description: 'Water bill payment',
-        date: '2024-01-14'
-      },
-      {
-        id: '3',
-        type: 'redeemed',
-        points: -450,
-        description: 'Airtime ₦1000 redeemed',
-        date: '2024-01-12'
-      },
-      {
-        id: '4',
-        type: 'earned',
-        points: 30,
-        description: 'Internet bill payment',
-        date: '2024-01-10'
-      }
-    ];
-    
-    setTransactions(mockTransactions);
-    setLoading(false);
-  };
+  const { userRewards, rewardItems, transactions, loading, redeemReward } = useRewardsSystem();
 
   const getTierInfo = (tier: string) => {
     const tiers = {
@@ -155,40 +21,14 @@ export const RewardsSystem: React.FC = () => {
     return tiers[tier as keyof typeof tiers] || tiers.Bronze;
   };
 
-  const redeemReward = async (reward: RewardItem) => {
-    if (userRewards.totalPoints < reward.cost) {
-      toast({
-        title: "Insufficient Points",
-        description: `You need ${reward.cost - userRewards.totalPoints} more points to redeem this reward`,
-        variant: "destructive"
-      });
-      return;
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'airtime': return <Smartphone className="h-5 w-5" />;
+      case 'bills': return <Zap className="h-5 w-5" />;
+      case 'donations': return <Heart className="h-5 w-5" />;
+      default: return <Gift className="h-5 w-5" />;
     }
-
-    setUserRewards(prev => ({
-      ...prev,
-      totalPoints: prev.totalPoints - reward.cost,
-      redeemedPoints: prev.redeemedPoints + reward.cost
-    }));
-
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      type: 'redeemed',
-      points: -reward.cost,
-      description: `${reward.name} redeemed`,
-      date: new Date().toISOString().split('T')[0]
-    };
-
-    setTransactions([newTransaction, ...transactions]);
-
-    toast({
-      title: "Reward Redeemed!",
-      description: `${reward.name} has been added to your account`
-    });
   };
-
-  const tierInfo = getTierInfo(userRewards.currentTier);
-  const progressPercentage = ((4000 - userRewards.pointsToNextTier) / 4000) * 100;
 
   if (loading) {
     return (
@@ -199,6 +39,31 @@ export const RewardsSystem: React.FC = () => {
       </Card>
     );
   }
+
+  if (!userRewards) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Banqa Rewards</CardTitle>
+          <CardDescription>Earn points with every transaction and redeem amazing rewards</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Welcome to Banqa Rewards!</h3>
+            <p className="text-muted-foreground">
+              Start making payments to earn points and unlock exclusive rewards.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const tierInfo = getTierInfo(userRewards.currentTier);
+  const progressPercentage = userRewards.pointsToNextTier > 0 
+    ? ((4000 - userRewards.pointsToNextTier) / 4000) * 100 
+    : 100;
 
   return (
     <div className="space-y-6">
@@ -246,21 +111,23 @@ export const RewardsSystem: React.FC = () => {
       </div>
 
       {/* Tier Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tier Progress</CardTitle>
-          <CardDescription>
-            {userRewards.pointsToNextTier} points to reach {tierInfo.nextTier} tier
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Progress value={progressPercentage} className="w-full" />
-          <div className="flex justify-between text-sm text-muted-foreground mt-2">
-            <span>{userRewards.currentTier}</span>
-            <span>{tierInfo.nextTier}</span>
-          </div>
-        </CardContent>
-      </Card>
+      {userRewards.pointsToNextTier > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tier Progress</CardTitle>
+            <CardDescription>
+              {userRewards.pointsToNextTier} points to reach {tierInfo.nextTier} tier
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Progress value={progressPercentage} className="w-full" />
+            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+              <span>{userRewards.currentTier}</span>
+              <span>{tierInfo.nextTier}</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Rewards Catalog */}
       <Tabs defaultValue="all" className="space-y-4">
@@ -273,45 +140,23 @@ export const RewardsSystem: React.FC = () => {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewardItems.map(reward => (
-              <Card key={reward.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {reward.icon}
-                      <CardTitle className="text-lg">{reward.name}</CardTitle>
-                    </div>
-                    <Badge variant="secondary">
-                      {reward.cost} pts
-                    </Badge>
-                  </div>
-                  <CardDescription>{reward.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button 
-                    onClick={() => redeemReward(reward)}
-                    disabled={userRewards.totalPoints < reward.cost}
-                    className="w-full"
-                  >
-                    {userRewards.totalPoints < reward.cost ? 'Insufficient Points' : 'Redeem'}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="airtime" className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewardItems
-              .filter(reward => reward.category === 'airtime')
-              .map(reward => (
+          {rewardItems.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <Gift className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No rewards available at the moment.</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rewardItems.map(reward => (
                 <Card key={reward.id}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {reward.icon}
+                        {getCategoryIcon(reward.category)}
                         <CardTitle className="text-lg">{reward.name}</CardTitle>
                       </div>
                       <Badge variant="secondary">
@@ -331,72 +176,43 @@ export const RewardsSystem: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
-          </div>
+            </div>
+          )}
         </TabsContent>
 
-        <TabsContent value="bills" className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewardItems
-              .filter(reward => reward.category === 'bills')
-              .map(reward => (
-                <Card key={reward.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {reward.icon}
-                        <CardTitle className="text-lg">{reward.name}</CardTitle>
+        {['airtime', 'bills', 'donations'].map(category => (
+          <TabsContent key={category} value={category} className="space-y-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rewardItems
+                .filter(reward => reward.category === category)
+                .map(reward => (
+                  <Card key={reward.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(reward.category)}
+                          <CardTitle className="text-lg">{reward.name}</CardTitle>
+                        </div>
+                        <Badge variant="secondary">
+                          {reward.cost} pts
+                        </Badge>
                       </div>
-                      <Badge variant="secondary">
-                        {reward.cost} pts
-                      </Badge>
-                    </div>
-                    <CardDescription>{reward.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      onClick={() => redeemReward(reward)}
-                      disabled={userRewards.totalPoints < reward.cost}
-                      className="w-full"
-                    >
-                      {userRewards.totalPoints < reward.cost ? 'Insufficient Points' : 'Redeem'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="donations" className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rewardItems
-              .filter(reward => reward.category === 'donations')
-              .map(reward => (
-                <Card key={reward.id}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {reward.icon}
-                        <CardTitle className="text-lg">{reward.name}</CardTitle>
-                      </div>
-                      <Badge variant="secondary">
-                        {reward.cost} pts
-                      </Badge>
-                    </div>
-                    <CardDescription>{reward.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button 
-                      onClick={() => redeemReward(reward)}
-                      disabled={userRewards.totalPoints < reward.cost}
-                      className="w-full"
-                    >
-                      {userRewards.totalPoints < reward.cost ? 'Insufficient Points' : 'Redeem'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        </TabsContent>
+                      <CardDescription>{reward.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button 
+                        onClick={() => redeemReward(reward)}
+                        disabled={userRewards.totalPoints < reward.cost}
+                        className="w-full"
+                      >
+                        {userRewards.totalPoints < reward.cost ? 'Insufficient Points' : 'Redeem'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          </TabsContent>
+        ))}
 
         <TabsContent value="history" className="space-y-4">
           <Card>
@@ -405,19 +221,25 @@ export const RewardsSystem: React.FC = () => {
               <CardDescription>Your recent points activity</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {transactions.map(transaction => (
-                  <div key={transaction.id} className="flex items-center justify-between py-2 border-b">
-                    <div>
-                      <p className="font-medium">{transaction.description}</p>
-                      <p className="text-sm text-muted-foreground">{transaction.date}</p>
+              {transactions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No transaction history yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.map(transaction => (
+                    <div key={transaction.id} className="flex items-center justify-between py-2 border-b">
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.date}</p>
+                      </div>
+                      <div className={`font-bold ${transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'}`}>
+                        {transaction.type === 'earned' ? '+' : ''}{transaction.points} pts
+                      </div>
                     </div>
-                    <div className={`font-bold ${transaction.type === 'earned' ? 'text-green-600' : 'text-red-600'}`}>
-                      {transaction.type === 'earned' ? '+' : ''}{transaction.points} pts
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
