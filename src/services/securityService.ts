@@ -1,10 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 interface MicroDepositTokenData {
   amounts: number[];
   created_at: string;
+  [key: string]: any; // Add index signature to make it compatible with Json type
 }
 
 export class SecurityService {
@@ -332,16 +332,16 @@ export class SecurityService {
         const amount1 = Math.floor(Math.random() * 99) + 1; // 1-99 cents
         const amount2 = Math.floor(Math.random() * 99) + 1;
         
-        const tokenData: MicroDepositTokenData = {
+        const tokenData = {
           amounts: [amount1, amount2],
           created_at: new Date().toISOString()
         };
         
-        // Store verification token
+        // Store verification token - cast to Json type
         const { error } = await supabase.from('bank_verification_tokens').insert({
           bank_account_id: bankAccountId,
           verification_type: 'micro_deposit',
-          token_data: tokenData,
+          token_data: tokenData as any, // Cast to any to satisfy Json type
           expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days
         });
         
@@ -400,8 +400,8 @@ export class SecurityService {
         };
       }
       
-      // Verify amounts - properly type the token_data
-      const tokenData = token.token_data as MicroDepositTokenData;
+      // Verify amounts - safely cast the token_data
+      const tokenData = token.token_data as unknown as MicroDepositTokenData;
       const expectedAmounts = tokenData.amounts;
       const isValid = expectedAmounts.includes(amount1) && expectedAmounts.includes(amount2) && amount1 !== amount2;
       
