@@ -11,6 +11,8 @@ import { OfflinePayments } from '@/components/payments/OfflinePayments';
 import { AIBillAssistant } from '@/components/ai/AIBillAssistant';
 import { BillSplitting } from '@/components/bills/BillSplitting';
 import { BundledPayments } from '@/components/payments/BundledPayments';
+import { SecurityDashboard } from '@/components/security/SecurityDashboard';
+import { SecurePinManager } from '@/components/security/SecurePinManager';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -23,7 +25,8 @@ import {
   WifiOff,
   Bot,
   Users,
-  Package
+  Package,
+  Shield
 } from 'lucide-react';
 
 const Advanced = () => {
@@ -35,7 +38,7 @@ const Advanced = () => {
       </div>
 
       <Tabs defaultValue="insights" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-11">
           <TabsTrigger value="insights" className="flex items-center gap-2">
             <Brain className="h-4 w-4" />
             <span className="hidden sm:inline">Insights</span>
@@ -72,9 +75,13 @@ const Advanced = () => {
             <Package className="h-4 w-4" />
             <span className="hidden sm:inline">Bundles</span>
           </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">Security</span>
+          </TabsTrigger>
           <TabsTrigger value="biometric" className="flex items-center gap-2">
             <Fingerprint className="h-4 w-4" />
-            <span className="hidden sm:inline">Security</span>
+            <span className="hidden sm:inline">Biometric</span>
           </TabsTrigger>
         </TabsList>
 
@@ -112,6 +119,59 @@ const Advanced = () => {
 
         <TabsContent value="bundles">
           <BundledPayments />
+        </TabsContent>
+
+        <TabsContent value="security">
+          <div className="space-y-6">
+            <SecurityDashboard />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <SecurePinManager />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Security Features
+                  </CardTitle>
+                  <CardDescription>
+                    Advanced security measures to protect your account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Enhanced Login Protection</p>
+                      <p className="text-sm text-muted-foreground">Rate limiting and suspicious activity detection</p>
+                    </div>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Device Fingerprinting</p>
+                      <p className="text-sm text-muted-foreground">Track and manage trusted devices</p>
+                    </div>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Real-time Monitoring</p>
+                      <p className="text-sm text-muted-foreground">Continuous security event monitoring</p>
+                    </div>
+                    <Badge variant="default">Active</Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Bank Account Verification</p>
+                      <p className="text-sm text-muted-foreground">Secure micro-deposit verification</p>
+                    </div>
+                    <Badge variant="default">Available</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="biometric">

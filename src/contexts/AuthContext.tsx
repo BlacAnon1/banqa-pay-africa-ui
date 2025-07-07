@@ -29,6 +29,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(async () => {
             const profileData = await profileService.fetchProfile(session.user.id);
             setProfile(profileData);
+            
+            // Register device for security monitoring
+            const { SecurityService } = await import('@/services/securityService');
+            await SecurityService.registerDevice(session.user.id);
+            
+            // Log security event
+            await SecurityService.logSecurityEvent(
+              session.user.id,
+              'user_login',
+              { login_method: 'email' }
+            );
           }, 0);
         } else {
           setProfile(null);
@@ -87,6 +98,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       const result = await authService.signUp(sanitizedData);
+      
+      // Record signup attempt
+      await SecurityService.recordLoginAttempt(
+        sanitizedData.email,
+        !result.error,
+        result.error?.message
+      );
+      
       return result;
     } finally {
       setLoading(false);
@@ -98,7 +117,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { SecurityService } = await import('@/services/securityService');
       
-      if (!SecurityService.checkRateLimit('signin')) {
+      // Check rate limiting
+      const rateLimitOk = await SecurityService.checkLoginRateLimit(email);
+      if (!rateLimitOk) {
+        await SecurityService.recordLoginAttempt(email, false, 'Rate limit exceeded');
         return { error: { message: 'Too many login attempts. Please try again later.' } };
       }
       
@@ -106,6 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sanitizedEmail = SecurityService.sanitizeInput(email);
       
       const result = await authService.signIn(sanitizedEmail, password);
+      
+      // Record login attempt
+      await SecurityService.recordLoginAttempt(
+        sanitizedEmail,
+        !result.error,
+        result.error?.message
+      );
+      
       return result;
     } finally {
       setLoading(false);
@@ -114,6 +144,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     const { SecurityService } = await import('@/services/securityService');
+    
+    // Log security event
+    if (user) {
+      await SecurityService.logSecurityEvent(
+        user.id,
+        'user_logout',
+        { logout_method: 'manual' }
+      );
+    }
+    
     SecurityService.clearSensitiveData();
     
     await authService.signOut();
@@ -131,6 +171,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Refresh profile data after update
       const updatedProfile = await profileService.fetchProfile(user.id);
       setProfile(updatedProfile);
+      
+      // Log security event
+      const { SecurityService } = await import('@/services/securityService');
+      await SecurityService.logSecurityEvent(
+        user.id,
+        'profile_update',
+        { updated_fields: Object.keys(profileData) }
+      );
     }
     
     return result;

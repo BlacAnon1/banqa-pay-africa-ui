@@ -70,6 +70,61 @@ export class SecurityService {
     return true;
   }
 
+  // Enhanced login rate limiting using database
+  static async checkLoginRateLimit(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.rpc('check_login_rate_limit', {
+        _email: email,
+        _ip_address: null // We'll enhance this later with actual IP detection
+      });
+
+      if (error) {
+        console.error('Rate limit check failed:', error);
+        return true; // Allow login if check fails
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Rate limit check error:', error);
+      return true;
+    }
+  }
+
+  // Record login attempt
+  static async recordLoginAttempt(email: string, success: boolean, failureReason?: string): Promise<void> {
+    try {
+      await supabase.rpc('record_login_attempt', {
+        _email: email,
+        _ip_address: null, // We'll enhance this later
+        _success: success,
+        _failure_reason: failureReason
+      });
+    } catch (error) {
+      console.error('Failed to record login attempt:', error);
+    }
+  }
+
+  // Log security event
+  static async logSecurityEvent(
+    userId: string,
+    eventType: string,
+    eventData: any = {},
+    riskScore: number = 0
+  ): Promise<void> {
+    try {
+      await supabase.rpc('log_security_event', {
+        _user_id: userId,
+        _event_type: eventType,
+        _event_data: eventData,
+        _ip_address: null, // We'll enhance this later
+        _user_agent: navigator.userAgent,
+        _risk_score: riskScore
+      });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  }
+
   // Secure session management
   static async validateSession(): Promise<boolean> {
     try {
@@ -96,6 +151,69 @@ export class SecurityService {
       console.error('Session validation error:', error);
       return false;
     }
+  }
+
+  // Device fingerprinting
+  static generateDeviceFingerprint(): string {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx?.fillText('Device fingerprint', 10, 10);
+    
+    const fingerprint = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset(),
+      canvas.toDataURL(),
+      navigator.hardwareConcurrency,
+      navigator.deviceMemory
+    ].join('|');
+    
+    return btoa(fingerprint).substring(0, 32);
+  }
+
+  // Register device
+  static async registerDevice(userId: string): Promise<void> {
+    try {
+      const fingerprint = this.generateDeviceFingerprint();
+      const deviceInfo = {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        platform: navigator.platform,
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      };
+
+      await supabase.from('user_devices').upsert({
+        user_id: userId,
+        device_fingerprint: fingerprint,
+        device_name: this.getDeviceName(),
+        device_type: this.getDeviceType(),
+        browser_info: deviceInfo,
+        last_seen: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Failed to register device:', error);
+    }
+  }
+
+  // Get device name
+  private static getDeviceName(): string {
+    const userAgent = navigator.userAgent;
+    if (/iPhone/.test(userAgent)) return 'iPhone';
+    if (/iPad/.test(userAgent)) return 'iPad';
+    if (/Android/.test(userAgent)) return 'Android Device';
+    if (/Windows/.test(userAgent)) return 'Windows PC';
+    if (/Mac/.test(userAgent)) return 'Mac';
+    return 'Unknown Device';
+  }
+
+  // Get device type
+  private static getDeviceType(): string {
+    const userAgent = navigator.userAgent;
+    if (/Mobile/.test(userAgent)) return 'mobile';
+    if (/Tablet/.test(userAgent)) return 'tablet';
+    return 'desktop';
   }
 
   // Secure transaction validation
@@ -198,5 +316,128 @@ export class SecurityService {
     sensitiveKeys.forEach(key => {
       localStorage.removeItem(key);
     });
+  }
+
+  // Bank account verification methods
+  static async initiateBankVerification(bankAccountId: string, method: 'micro_deposit' | 'instant'): Promise<{ success: boolean; message: string }> {
+    try {
+      if (method === 'micro_deposit') {
+        // Generate random micro deposit amounts
+        const amount1 = Math.floor(Math.random() * 99) + 1; // 1-99 cents
+        const amount2 = Math.floor(Math.random() * 99) + 1;
+        
+        const tokenData = {
+          amounts: [amount1, amount2],
+          created_at: new Date().toISOString()
+        };
+        
+        // Store verification token
+        const { error } = await supabase.from('bank_verification_tokens').insert({
+          bank_account_id: bankAccountId,
+          verification_type: 'micro_deposit',
+          token_data: tokenData,
+          expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days
+        });
+        
+        if (error) throw error;
+        
+        return {
+          success: true,
+          message: 'Micro deposits initiated. Check your bank account in 1-2 business days.'
+        };
+      }
+      
+      return {
+        success: false,
+        message: 'Verification method not supported yet'
+      };
+    } catch (error: any) {
+      console.error('Bank verification error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to initiate verification'
+      };
+    }
+  }
+
+  static async verifyMicroDeposits(bankAccountId: string, amount1: number, amount2: number): Promise<{ success: boolean; message: string }> {
+    try {
+      // Get verification token
+      const { data: token, error: tokenError } = await supabase
+        .from('bank_verification_tokens')
+        .select('*')
+        .eq('bank_account_id', bankAccountId)
+        .eq('verification_type', 'micro_deposit')
+        .eq('status', 'pending')
+        .single();
+      
+      if (tokenError || !token) {
+        return {
+          success: false,
+          message: 'No pending verification found'
+        };
+      }
+      
+      // Check if token is expired
+      if (new Date(token.expires_at) < new Date()) {
+        return {
+          success: false,
+          message: 'Verification token has expired'
+        };
+      }
+      
+      // Check attempts
+      if (token.attempts >= token.max_attempts) {
+        return {
+          success: false,
+          message: 'Maximum verification attempts exceeded'
+        };
+      }
+      
+      // Verify amounts
+      const expectedAmounts = token.token_data.amounts;
+      const isValid = expectedAmounts.includes(amount1) && expectedAmounts.includes(amount2) && amount1 !== amount2;
+      
+      if (isValid) {
+        // Update token status
+        await supabase
+          .from('bank_verification_tokens')
+          .update({ status: 'verified' })
+          .eq('id', token.id);
+        
+        // Update bank account
+        await supabase
+          .from('bank_accounts')
+          .update({
+            is_verified: true,
+            verification_status: 'verified',
+            verification_method: 'micro_deposit',
+            verified_at: new Date().toISOString()
+          })
+          .eq('id', bankAccountId);
+        
+        return {
+          success: true,
+          message: 'Bank account verified successfully'
+        };
+      } else {
+        // Increment attempts
+        await supabase
+          .from('bank_verification_tokens')
+          .update({ attempts: token.attempts + 1 })
+          .eq('id', token.id);
+        
+        return {
+          success: false,
+          message: `Incorrect amounts. ${token.max_attempts - token.attempts - 1} attempts remaining.`
+        };
+      }
+    } catch (error: any) {
+      console.error('Micro deposit verification error:', error);
+      return {
+        success: false,
+        message: error.message || 'Verification failed'
+      };
+    }
   }
 }

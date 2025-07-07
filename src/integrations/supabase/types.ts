@@ -24,8 +24,14 @@ export type Database = {
           id: string
           is_default: boolean | null
           is_verified: boolean | null
+          last_verification_attempt: string | null
           updated_at: string | null
           user_id: string
+          verification_attempts: number | null
+          verification_data: Json | null
+          verification_method: string | null
+          verification_status: string | null
+          verified_at: string | null
         }
         Insert: {
           account_name: string
@@ -36,8 +42,14 @@ export type Database = {
           id?: string
           is_default?: boolean | null
           is_verified?: boolean | null
+          last_verification_attempt?: string | null
           updated_at?: string | null
           user_id: string
+          verification_attempts?: number | null
+          verification_data?: Json | null
+          verification_method?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
         }
         Update: {
           account_name?: string
@@ -48,10 +60,63 @@ export type Database = {
           id?: string
           is_default?: boolean | null
           is_verified?: boolean | null
+          last_verification_attempt?: string | null
           updated_at?: string | null
           user_id?: string
+          verification_attempts?: number | null
+          verification_data?: Json | null
+          verification_method?: string | null
+          verification_status?: string | null
+          verified_at?: string | null
         }
         Relationships: []
+      }
+      bank_verification_tokens: {
+        Row: {
+          attempts: number | null
+          bank_account_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          max_attempts: number | null
+          status: string | null
+          token_data: Json
+          updated_at: string | null
+          verification_type: string
+        }
+        Insert: {
+          attempts?: number | null
+          bank_account_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          max_attempts?: number | null
+          status?: string | null
+          token_data: Json
+          updated_at?: string | null
+          verification_type?: string
+        }
+        Update: {
+          attempts?: number | null
+          bank_account_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          max_attempts?: number | null
+          status?: string | null
+          token_data?: Json
+          updated_at?: string | null
+          verification_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_verification_tokens_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bill_forecasts: {
         Row: {
@@ -726,6 +791,33 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          created_at: string | null
+          email: string
+          failure_reason: string | null
+          id: string
+          ip_address: unknown | null
+          success: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          failure_reason?: string | null
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean | null
+        }
+        Relationships: []
+      }
       money_transfers: {
         Row: {
           amount_received: number
@@ -1091,6 +1183,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          risk_score: number | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          risk_score?: number | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          risk_score?: number | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           api_endpoint: string | null
@@ -1216,6 +1341,72 @@ export type Database = {
           },
         ]
       }
+      user_2fa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          secret_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          secret_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          secret_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_devices: {
+        Row: {
+          browser_info: Json | null
+          device_fingerprint: string
+          device_name: string | null
+          device_type: string | null
+          first_seen: string | null
+          id: string
+          is_trusted: boolean | null
+          last_seen: string | null
+          user_id: string
+        }
+        Insert: {
+          browser_info?: Json | null
+          device_fingerprint: string
+          device_name?: string | null
+          device_type?: string | null
+          first_seen?: string | null
+          id?: string
+          is_trusted?: boolean | null
+          last_seen?: string | null
+          user_id: string
+        }
+        Update: {
+          browser_info?: Json | null
+          device_fingerprint?: string
+          device_name?: string | null
+          device_type?: string | null
+          first_seen?: string | null
+          id?: string
+          is_trusted?: boolean | null
+          last_seen?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_insights: {
         Row: {
           amount_spent: number
@@ -1323,6 +1514,42 @@ export type Database = {
           tier_progress?: number
           total_points?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          session_token?: string
           user_id?: string
         }
         Relationships: []
@@ -1601,9 +1828,33 @@ export type Database = {
         Args: { amount: number; transaction_type: string }
         Returns: number
       }
+      check_login_rate_limit: {
+        Args: { _email: string; _ip_address?: unknown }
+        Returns: boolean
+      }
       generate_banqa_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      log_security_event: {
+        Args: {
+          _user_id: string
+          _event_type: string
+          _event_data?: Json
+          _ip_address?: unknown
+          _user_agent?: string
+          _risk_score?: number
+        }
+        Returns: string
+      }
+      record_login_attempt: {
+        Args: {
+          _email: string
+          _ip_address?: unknown
+          _success?: boolean
+          _failure_reason?: string
+        }
+        Returns: undefined
       }
       update_currency_exchange_rate: {
         Args: { currency_code: string; new_rate: number }
