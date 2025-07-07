@@ -2,6 +2,11 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+interface MicroDepositTokenData {
+  amounts: number[];
+  created_at: string;
+}
+
 export class SecurityService {
   // Advanced password validation
   static validatePassword(password: string): { isValid: boolean; errors: string[] } {
@@ -166,7 +171,8 @@ export class SecurityService {
       new Date().getTimezoneOffset(),
       canvas.toDataURL(),
       navigator.hardwareConcurrency,
-      navigator.deviceMemory
+      // Safely access deviceMemory with fallback
+      (navigator as any).deviceMemory || 'unknown'
     ].join('|');
     
     return btoa(fingerprint).substring(0, 32);
@@ -326,7 +332,7 @@ export class SecurityService {
         const amount1 = Math.floor(Math.random() * 99) + 1; // 1-99 cents
         const amount2 = Math.floor(Math.random() * 99) + 1;
         
-        const tokenData = {
+        const tokenData: MicroDepositTokenData = {
           amounts: [amount1, amount2],
           created_at: new Date().toISOString()
         };
@@ -394,8 +400,9 @@ export class SecurityService {
         };
       }
       
-      // Verify amounts
-      const expectedAmounts = token.token_data.amounts;
+      // Verify amounts - properly type the token_data
+      const tokenData = token.token_data as MicroDepositTokenData;
+      const expectedAmounts = tokenData.amounts;
       const isValid = expectedAmounts.includes(amount1) && expectedAmounts.includes(amount2) && amount1 !== amount2;
       
       if (isValid) {
@@ -436,7 +443,7 @@ export class SecurityService {
       console.error('Micro deposit verification error:', error);
       return {
         success: false,
-        message: error.message || 'Verification failed'
+        message: error.message || 'verification failed'
       };
     }
   }

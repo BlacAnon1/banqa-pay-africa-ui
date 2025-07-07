@@ -12,6 +12,7 @@ interface BankAccount {
   bank_code: string;
   is_default: boolean;
   is_verified: boolean;
+  verification_status: string;
   created_at: string;
 }
 
